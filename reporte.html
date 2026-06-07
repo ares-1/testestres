@@ -142,14 +142,10 @@ nav{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-conte
   <div class="estado-wrap" id="estado-incompleto" style="display:none">
     <div class="estado-icon">📋</div>
     <h2 class="estado-titulo">Completa los 4 tests primero</h2>
-    <p class="estado-desc">Para generar tu reporte necesitas terminar los cuatro tests <strong>en este mismo navegador</strong>. Cada uno tarda entre 10 y 18 minutos.</p>
-    <div style="background:#FDF3E3;border:1px solid #D4A050;border-radius:4px;padding:.85rem 1rem;margin-bottom:1rem;font-size:14px;line-height:1.6;color:#633806;max-width:420px;text-align:left">
-      ⚠ Los resultados se guardan en este navegador. Si hiciste los tests en otro navegador o dispositivo, tendrás que repetirlos aquí.
-    </div>
+    <p class="estado-desc">Para generar tu reporte personalizado necesitas terminar los cuatro tests. Cada uno tarda entre 10 y 18 minutos.</p>
     <div class="tests-check" id="tests-check"></div>
-    <div style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center">
-      <a href="index.html#tests" class="btn-ir">Ir a los tests</a>
-      <button class="btn-ir-s" onclick="limpiarYReiniciar()">Reiniciar todo</button>
+    <div>
+      <a href="index.html#tests" class="btn-ir">Ver los tests</a>
     </div>
   </div>
 
@@ -163,7 +159,6 @@ nav{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-conte
       <button class="btn-ir" onclick="generarReporte()">Generar mi reporte</button>
       <a href="index.html#tests" class="btn-ir-s">Revisar los tests</a>
     </div>
-    <p style="font-size:13px;color:var(--texto-m);margin-top:1rem;cursor:pointer;text-decoration:underline" onclick="limpiarYReiniciar()">¿Los hiciste en otro navegador? Haz clic aquí para reiniciar</p>
   </div>
 
   <!-- CARGANDO -->
@@ -256,33 +251,14 @@ nav{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-conte
 emailjs.init('AS4JMWcosY0dk8FBl');
 
 // ── LEER RESULTADOS ──
-let t1=null,t2=null,t3=null,t4=null;
-try{t1=JSON.parse(localStorage.getItem('test1_resultado'))}catch(e){}
-try{t2=JSON.parse(localStorage.getItem('test2_resultado'))}catch(e){}
-try{t3=JSON.parse(localStorage.getItem('test3_resultado'))}catch(e){}
-try{t4=JSON.parse(localStorage.getItem('test4_resultado'))}catch(e){}
-
-// Fallback: si no hay resultado pero sí visitado, marcar como pendiente con mensaje
+const t1=JSON.parse(localStorage.getItem('test1_resultado')||'null');
+const t2=JSON.parse(localStorage.getItem('test2_resultado')||'null');
+const t3=JSON.parse(localStorage.getItem('test3_resultado')||'null');
+const t4=JSON.parse(localStorage.getItem('test4_resultado')||'null');
 const nombre=localStorage.getItem('reporte_nombre')||'';
+
 const completos=[t1,t2,t3,t4].map((t,i)=>({n:i+1,ok:!!t}));
 const todosCompletos=completos.every(c=>c.ok);
-
-// Debug en consola
-console.log('Tests en localStorage:', {
-  t1: !!t1, t2: !!t2, t3: !!t3, t4: !!t4,
-  v1: localStorage.getItem('test1_visitado'),
-  v2: localStorage.getItem('test2_visitado'),
-  v3: localStorage.getItem('test3_visitado'),
-  v4: localStorage.getItem('test4_visitado')
-});
-
-function limpiarYReiniciar(){
-  if(confirm('¿Seguro? Esto borrará los resultados guardados y tendrás que hacer los tests de nuevo.')){
-    ['test1_resultado','test2_resultado','test3_resultado','test4_resultado',
-     'test1_visitado','test2_visitado','test3_visitado','test4_visitado'].forEach(k=>localStorage.removeItem(k));
-    window.location.href='index.html#tests';
-  }
-}
 
 // ── MOSTRAR ESTADO ──
 function buildCheckRow(n,ok,label){
@@ -307,63 +283,16 @@ async function generarReporte(){
   document.getElementById('estado-listo').style.display='none';
   document.getElementById('cargando').style.display='block';
 
+  // Animar pasos
   const pasos=document.querySelectorAll('#pasos-cargando li');
   let pasoActual=0;
   const animPasos=setInterval(()=>{
     pasos.forEach(p=>p.classList.remove('activo'));
     if(pasoActual<pasos.length){pasos[pasoActual].classList.add('activo');pasoActual++;}
-  },1800);
+  },2000);
 
-  const prompt=construirPrompt();
-
-  try{
-    // Llamada via proxy CORS
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':'',
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:3000,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-
-    clearInterval(animPasos);
-
-    if(!resp.ok){
-      const errData=await resp.json().catch(()=>({}));
-      console.error('API error:', resp.status, errData);
-      throw new Error('API status '+resp.status);
-    }
-
-    const data=await resp.json();
-    const texto=data.content[0].text;
-    let r;
-    try{
-      const match=texto.match(/\{[\s\S]*\}/);
-      r=JSON.parse(match?match[0]:texto);
-    }catch(e){
-      console.error('JSON parse error:', e, texto.substring(0,200));
-      throw new Error('JSON inválido');
-    }
-    mostrarReporte(r);
-
-  }catch(err){
-    clearInterval(animPasos);
-    console.error('Error completo:', err);
-    // Fallback: generar reporte local con los datos
-    const rLocal=generarReporteLocal();
-    mostrarReporte(rLocal);
-  }
-}
-
-function construirPrompt(){
-  return `Eres el asistente de diagnóstico del libro "El último en enterarse" de Enrique Berrueta Alvarez, pedagogo y orientador familiar con 30 años de experiencia directiva.
+  // Construir prompt con todos los resultados
+  const prompt=`Eres el asistente de diagnóstico del libro "El último en enterarse" de Enrique Berrueta Alvarez, pedagogo y orientador familiar con 30 años de experiencia directiva. 
 
 El directivo acaba de completar los cuatro tests del sistema de autodiagnóstico. Aquí están sus resultados:
 
@@ -371,6 +300,7 @@ TEST 1 — EL CICLO DEL ESTRÉS:
 - Perfil: ${t1.titulo}
 - Puntuación: ${t1.puntuacion}/150 (${t1.porcentaje}%)
 - Sección más baja: ${t1.seccionMasBaja}
+- Energía: ${t1.secciones.A}% | Decisiones: ${t1.secciones.B}% | Relaciones: ${t1.secciones.C}% | Cuerpo: ${t1.secciones.D}% | Identidad: ${t1.secciones.E}% | La línea: ${t1.secciones.F}%
 
 TEST 2 — LA MECHA:
 - Tipología: ${t2.tipologia}
@@ -381,70 +311,63 @@ TEST 3 — LAS ZONAS:
 - Zona dominante: ${t3.zonaDOM}
 - Zona secundaria: ${t3.zonaSEG}
 - Trinchera activa: ${t3.alertaTrinchera?'SÍ':'NO'}
+- Niebla: ${t3.pctNiebla}% | Fuego: ${t3.pctFuego}% | Pantano: ${t3.pctPantano}% | Espejo: ${t3.pctEspejo}% | Trinchera: ${t3.pctTrinchera}%
 
 TEST 4 — LA FACTURA:
 - Nivel general: ${t4.titulo} (${t4.porcentaje}%)
 - Cuota más crítica: ${t4.cuotaMasCritica}
-- Directivo funcional detectado: ${t4.esFuncional?'SÍ':'NO'}
+- Perfil directivo funcional detectado: ${t4.esFuncional?'SÍ':'NO'}
 - Cuerpo: ${t4.cuerpo}/50 (${t4.cuerpoNivel}) | Relaciones: ${t4.relaciones}/50 (${t4.relacionesNivel}) | Rendimiento: ${t4.rendimiento}/50 (${t4.rendimientoNivel}) | Identidad: ${t4.identidad}/50 (${t4.identidadNivel})
 
-Genera un reporte integrado personalizado. Responde ÚNICAMENTE con JSON válido, sin texto adicional, sin markdown, sin backticks:
+Genera un reporte integrado personalizado con exactamente esta estructura en JSON válido (sin markdown, sin backticks, solo JSON):
 
-{"perfil_nombre":"nombre evocador 3-5 palabras","perfil_titulo":"título 8-12 palabras que capture la esencia","diagnostico":"3 párrafos separados por salto de línea. Usa lenguaje del libro: ciclo mecha zona factura línea. Tono mentor-amigo segunda persona.","dinamica":"2 párrafos explicando cómo se alimentan sus cuatro resultados entre sí.","plan_semanas":[{"semana":"Semanas 1-2","titulo":"título concreto","descripcion":"acción específica"},{"semana":"Semanas 3-4","titulo":"título","descripcion":"acción"},{"semana":"Semanas 5-6","titulo":"título","descripcion":"acción"},{"semana":"Semanas 7-8","titulo":"título","descripcion":"acción"},{"semana":"Semanas 9-10","titulo":"título","descripcion":"acción"},{"semana":"Semanas 11-12","titulo":"título","descripcion":"acción con conversación pendiente Cap.10"}],"riesgo":"2 párrafos honestos sobre qué puede ocurrir sin acción en 90 días. Menciona Cap.7.","lecturas":"3 libros de la bibliografía con razón específica para este perfil.","pregunta_cierre":"pregunta final personalizada solo para este directivo específico."}`;
+{
+  "perfil_nombre": "nombre evocador de 3-5 palabras para este perfil único",
+  "perfil_titulo": "título del reporte en 8-12 palabras que capture la esencia de este directivo",
+  "diagnostico": "3 párrafos narrativos que expliquen qué significa esta combinación específica de resultados. Usa el lenguaje del libro: ciclo, mecha, zona, factura, línea. Tono de mentor-amigo, no clínico. Voz en segunda persona. Menciona conceptos de Hans Selye, Daniel Goleman, y el Capítulo correspondiente del libro.",
+  "dinamica": "2 párrafos explicando cómo se alimentan entre sí sus cuatro resultados. Qué produce esta combinación específica en el día a día directivo. Sé concreto y específico a sus datos.",
+  "plan_semanas": [
+    {"semana": "Semanas 1-2", "titulo": "título concreto", "descripcion": "qué hace exactamente, referenciando su mecha y zona específicas"},
+    {"semana": "Semanas 3-4", "titulo": "título concreto", "descripcion": "qué hace exactamente"},
+    {"semana": "Semanas 5-6", "titulo": "título concreto", "descripcion": "qué hace exactamente"},
+    {"semana": "Semanas 7-8", "titulo": "título concreto", "descripcion": "qué hace exactamente"},
+    {"semana": "Semanas 9-10", "titulo": "título concreto", "descripcion": "qué hace exactamente"},
+    {"semana": "Semanas 11-12", "titulo": "título concreto", "descripcion": "qué hace exactamente, conectando con la conversación que falta del Cap. 10"}
+  ],
+  "riesgo": "2 párrafos sobre qué puede ocurrir si no actúa en 90 días, basado en su nivel de factura y su proximidad a la línea. Honesto pero no alarmista. Menciona el Capítulo 7.",
+  "lecturas": "3 libros específicos de la bibliografía del libro que corresponden a su perfil, con 1-2 oraciones de por qué ese libro para este directivo específico. Elige entre: Selye, Sapolsky, Goleman, Frankl, Marco Aurelio, Agassi, Clear, Edmondson, Covey.",
+  "pregunta_cierre": "una pregunta final personalizada para este directivo específico, basada en su combinación de resultados. Que no sea genérica. Que solo tenga sentido para él."
+}`;
+
+  try {
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:3000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await resp.json();
+    clearInterval(animPasos);
+    const texto=data.content[0].text;
+    let r;
+    try{r=JSON.parse(texto)}
+    catch(e){
+      const match=texto.match(/\{[\s\S]*\}/);
+      if(match) r=JSON.parse(match[0]);
+      else throw new Error('JSON inválido');
+    }
+    mostrarReporte(r);
+  } catch(err){
+    clearInterval(animPasos);
+    document.getElementById('cargando').style.display='none';
+    document.getElementById('estado-listo').style.display='block';
+    document.getElementById('tests-check-listo').innerHTML='<div style="color:var(--rojo);font-size:15px;padding:1rem;background:var(--rojo-c);border-radius:4px;border:1px solid var(--rojo)">Hubo un error al generar el reporte. Por favor intenta de nuevo.</div>'+
+      document.getElementById('tests-check-listo').innerHTML;
+  }
 }
-
-function generarReporteLocal(){
-  // Reporte de respaldo cuando la API no está disponible
-  // Genera contenido rico basado en los datos reales del directivo
-  const ciclo=t1.titulo;
-  const mecha=t2.tipologia;
-  const combo=t2.combinacion;
-  const zonaD=t3.zonaDOM;
-  const zonaS=t3.zonaSEG;
-  const factura=t4.titulo;
-  const cuotaC=t4.cuotaMasCritica;
-  const funcional=t4.esFuncional;
-
-  const diagnosticos={
-    'Eustrés — zona productiva':'Estás en el mejor momento para hacer este trabajo: dentro de la curva, con recursos disponibles. Eso no significa que el riesgo sea cero — significa que tienes una ventana de tiempo que pocos directivos aprovechan conscientemente.',
-    'Señales de distrés — el agua se calienta':'El ciclo ya empezó a bajar. No es una crisis — es el momento más eficiente para intervenir. El Capítulo 6 del libro lo dice con precisión: el punto de intervención más valioso está exactamente aquí, antes de que la factura se consolide.',
-    'Factura acumulándose — el directivo funcional':'Sigues cumpliendo. Sigues llegando. Pero el depósito lleva tiempo en rojo sin que nadie lo vea — empezando por ti. Este es el perfil más peligroso del ciclo: la capacidad de seguir funcionando impide recibir la señal de alarma.',
-    'Cerca de la línea de no retorno':'El estrés ha dejado de ser un problema que tienes y se está convirtiendo en el sistema desde el que operas. Reconocer esto no es una condena — es la señal más importante. Todavía estás a este lado de la línea.'
-  };
-
-  const desc_diag=diagnosticos[ciclo]||diagnosticos['Señales de distrés — el agua se calienta'];
-
-  return {
-    perfil_nombre: mecha+' en '+zonaD,
-    perfil_titulo: 'Directivo '+mecha+' operando en '+zonaD+' con factura activa en '+cuotaC,
-    diagnostico: desc_diag+'
-
-Tu mecha es '+combo+'. Eso significa que cuando el estrés aprieta, tu detonador específico tiene que ver con '+t2.combinacion.toLowerCase()+'. El Capítulo 8 describe este patrón con precisión: no es tu carácter, es tu historia acumulada.
-
-La zona donde estás operando — '+zonaD+(t3.zonaSEG?' y '+t3.zonaSEG:'')+' — define cómo vives el problema en el día a día. Tu factura más alta está en '+cuotaC+'. Esa es la prioridad real, no las cuatro dimensiones a la vez.',
-    dinamica: 'La combinación de '+ciclo.split('—')[0].trim()+' con mecha de '+mecha+' y zona '+zonaD+' crea un patrón específico: el estrés se acumula desde el detonador, se instala en la zona y cobra en la dimensión de '+cuotaC+'. Cada parte alimenta a la siguiente.
-
-'+(funcional?'El perfil de directivo funcional que tienes hace este patrón especialmente invisible. Sigues produciendo resultados mientras el costo sube en silencio. El Capítulo 6 describe exactamente esto: la capacidad de seguir funcionando es también lo que impide ver la señal de alarma a tiempo.':'La buena noticia es que este patrón es reconocible y modificable. El primer paso — que ya diste al terminar estos tests — es nombrarlo con precisión.'),
-    plan_semanas:[
-      {semana:'Semanas 1-2',titulo:'Observar el patrón sin cambiar nada',descripcion:'Aplica el termómetro de tres preguntas del Capítulo 3 al final de cada jornada. Anota tu nivel de energía, calidad de decisiones y presencia relacional. No cambies nada todavía — acumula datos reales sobre tu patrón específico.'},
-      {semana:'Semanas 3-4',titulo:'Instalar El Ancla',descripcion:'Antes de responder en cualquier situación que active tu mecha de '+mecha.toLowerCase()+', aplica El Ancla: tres respiraciones + una pregunta interna. No para no sentir — para elegir cómo responder. Capítulo 9.'},
-      {semana:'Semanas 5-6',titulo:'Atender la cuota de '+cuotaC,descripcion:'Tu cuota más activa es '+cuotaC+'. Esta semana elige una acción concreta para esa dimensión específica. No las cuatro — una. Pequeña si hace falta. Con fecha y con tu nombre.'},
-      {semana:'Semanas 7-8',titulo:'Protocolo de 24 horas',descripcion:'Cualquier decisión importante tomada bajo presión emocional alta se pospone 24 horas si la situación lo permite. No es indecisión — es reconocer que el cerebro bajo estrés no tiene acceso completo a su capacidad analítica. Capítulo 9.'},
-      {semana:'Semanas 9-10',titulo:'Salir de la zona '+zonaD,descripcion:'Identifica la decisión más antigua que la zona '+zonaD+' lleva postergando. Esta semana actúa sobre ella aunque sea de forma parcial. La dirección importa más que la perfección. Capítulo 5.'},
-      {semana:'Semanas 11-12',titulo:'La conversación que falta',descripcion:'Hay una conversación pendiente que identificaste en estas semanas. Tenla. Con preparación, sin garantía de perfección. El Capítulo 10 tiene el protocolo. Seguir postergándola tiene un costo mayor que cualquier incomodidad de la conversación.'}
-    ],
-    riesgo: 'Si no actúas en los próximos 90 días, el patrón actual seguirá consolidándose. La zona '+zonaD+' produce su propio costo energético silencioso. La mecha de '+mecha+' seguirá activándose ante los mismos detonadores. Y la cuota de '+cuotaC+' seguirá subiendo sin señal de alarma visible. El Capítulo 7 lo describe con precisión.
-
-'+(funcional?'El riesgo específico del directivo funcional es que el colapso nunca llega de forma dramática — llega como apagamiento gradual. Un día te das cuenta de que llevas años funcionando por inercia. El momento para cambiarlo es siempre antes de ese día.':'El punto de intervención más eficiente es ahora. No porque estés en crisis — sino porque tienes recursos disponibles que en seis meses pueden no estar.'),
-    lecturas: 'Sapolsky, R. — Why Zebras Don't Get Ulcers: Para entender por qué tu cuerpo lleva la cuenta aunque tú no la lleves. Especialmente relevante para tu cuota de '+cuotaC+'.
-
-Goleman, D. — Inteligencia emocional: El capítulo sobre el secuestro amigdalino explica con precisión la mecánica de tu mecha de '+mecha.toLowerCase()+'. Leerlo cambia cómo te ves cuando reaccionas.
-
-Clear, J. — Hábitos atómicos: El manual técnico del Capítulo 10. Para implementar el plan de 90 días sin el error de intentar cambiar todo a la vez.',
-    pregunta_cierre: '¿En qué momento exacto del día de hoy actuaste como directivo cuando debías actuar como persona — y qué habría cambiado si hubieras hecho lo contrario?'
-  };
-}
-
 
 function mostrarReporte(r){
   document.getElementById('cargando').style.display='none';
