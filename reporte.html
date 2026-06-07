@@ -333,7 +333,7 @@ function animarPasos() {
 function generarReporte() {
   document.getElementById('div-listo').style.display = 'none';
   document.getElementById('div-cargando').style.display = 'block';
-  var anim = animarPasos();
+  var timers = animarPasos();
 
   var nombre_dir = directivo_nombre || 'el directivo';
   var t1titulo = t1 ? t1.titulo : '';
