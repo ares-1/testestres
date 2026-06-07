@@ -298,11 +298,11 @@ function animarPasos() {
     'Construyendo plan de 90 dias...',
     'Redactando recomendaciones...',
     'Generando temas de coaching...',
-    'Finalizando tu reporte...'
+    'Ajustando detalles finales...'
   ];
-  var pcts = [5, 15, 30, 45, 60, 75, 88, 95];
   var i = 0;
   var seg = 0;
+  var pctActual = 0;
 
   var cron = setInterval(function() {
     seg++;
@@ -310,17 +310,22 @@ function animarPasos() {
     if (el) el.textContent = seg + 's';
   }, 1000);
 
+  // Avanza el paso cada 8 segundos pero nunca pasa de 92%
   var anim = setInterval(function() {
     if (i < pasosTxt.length) {
       var pt = document.getElementById('paso-txt');
-      var pc = document.getElementById('pct-txt');
-      var bar = document.getElementById('barra-ia');
       if (pt) pt.textContent = pasosTxt[i];
-      if (pc) pc.textContent = pcts[i] + '%';
-      if (bar) bar.style.width = pcts[i] + '%';
       i++;
     }
-  }, 3500);
+    // Avance gradual que desacelera al acercarse al 92%
+    if (pctActual < 92) {
+      pctActual = Math.min(92, pctActual + (i < 4 ? 12 : 5));
+      var pc = document.getElementById('pct-txt');
+      var bar = document.getElementById('barra-ia');
+      if (pc) pc.textContent = pctActual + '%';
+      if (bar) bar.style.width = pctActual + '%';
+    }
+  }, 8000);
 
   return { anim: anim, cron: cron };
 }
@@ -368,7 +373,7 @@ function generarReporte() {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-5',
-      max_tokens: 2500,
+      max_tokens: 1800,
       messages: [{ role: 'user', content: prompt }]
     })
   })
@@ -386,63 +391,11 @@ function generarReporte() {
   })
   .catch(function(err) {
     clearInterval(timers.anim); clearInterval(timers.cron);
-    var bar=document.getElementById("barra-ia"); if(bar){bar.style.width="100%";} var pc=document.getElementById("pct-txt"); if(pc){pc.textContent="100%";}
-    console.log('API fallo, usando reporte local:', err.message);
-    mostrarReporte(generarLocal());
+    console.error('Error:', err.message);
+    document.getElementById('div-cargando').style.display = 'none';
+    document.getElementById('div-listo').style.display = 'block';
+    document.getElementById('checks-listo').innerHTML = '<div style="color:var(--rojo);background:var(--rojo-c);border:1px solid var(--rojo);border-radius:4px;padding:1rem;font-size:15px;text-align:center">Hubo un error. Por favor intenta de nuevo.</div>';
   });
-}
-
-function generarLocal() {
-  var ciclo = t1 ? t1.titulo : 'Senales de distres';
-  var mecha = t2 ? t2.tipologia : 'El Directivo';
-  var combo = t2 ? t2.combinacion : 'Control + Limites';
-  var zonaD = t3 ? t3.zonaDOM : 'Fuego';
-  var zonaS = t3 ? t3.zonaSEG : 'Pantano';
-  var factura = t4 ? t4.titulo : 'Factura acumulandose';
-  var cuota = t4 ? t4.cuotaMasCritica : 'Relaciones';
-  var funcional = t4 ? t4.esFuncional : false;
-
-  return {
-    perfil_nombre: mecha + ' en ' + zonaD,
-    perfil_titulo: 'Directivo ' + mecha + ' - ' + ciclo + ' - Cuota critica en ' + cuota,
-    diagnostico: 'Tu ciclo actual es: ' + ciclo + '. Llevas tiempo operando desde este punto y el costo ya es visible en tu nivel de energia, tus decisiones y tu presencia relacional. Lo que el Capitulo 3 del libro describe como la curva que nadie te dibujo aplica directamente a donde estas ahora.\n\nTu mecha es ' + combo + ', lo que significa que cuando el estres aprieta tu detonador especifico se activa desde esa combinacion. El Capitulo 8 describe este patron con precision: no es tu caracter, es tu historia acumulada. La diferencia importa porque los rasgos de caracter son dificiles de cambiar y los patrones de respuesta al estres son modificables.\n\nLa zona donde operas es ' + zonaD + ' con ' + zonaS + ' como zona secundaria. Tu factura mas alta esta en ' + cuota + '. Esa es tu prioridad real esta semana, no las cuatro dimensiones a la vez. El directivo que intenta resolver todo simultaneamente no resuelve nada.',
-    dinamica: 'La combinacion de ' + ciclo.split(' ')[0] + ' con mecha de ' + mecha + ' operando en zona de ' + zonaD + ' crea un patron especifico: el estres se acumula desde el detonador, se instala en la zona y cobra en la dimension de ' + cuota + '. Cada parte alimenta a la siguiente sin que el directivo lo vea con claridad porque esta dentro del ciclo.\n\n' + (funcional ? 'El perfil de directivo funcional que muestran tus resultados hace este patron especialmente invisible desde afuera. Sigues produciendo resultados mientras el costo sube en silencio. Churchill lo vivio durante anos. La capacidad de seguir funcionando es tambien lo que impide recibir la senal de alarma a tiempo.' : 'La buena noticia es que este patron es reconocible y modificable. El primer paso que ya diste al terminar estos tests es nombrarlo con precision. Nombrar es el primer paso para salir.'),
-    plan_semanas: [
-      { semana: 'Semanas 1-2', titulo: 'Observar el patron sin cambiar nada', descripcion: 'Aplica el termometro de tres preguntas del Capitulo 3 al final de cada jornada. Energia, calidad de decisiones, presencia relacional. No cambies nada todavia. Acumula datos reales sobre tu patron especifico.' },
-      { semana: 'Semanas 3-4', titulo: 'Instalar El Ancla', descripcion: 'Antes de responder en cualquier situacion que active tu mecha de ' + mecha.toLowerCase() + ', aplica El Ancla: tres respiraciones mas una pregunta interna. No para no sentir sino para elegir como responder. Capitulo 9.' },
-      { semana: 'Semanas 5-6', titulo: 'Atender la cuota de ' + cuota, descripcion: 'Tu cuota mas activa es ' + cuota + '. Elige una accion concreta para esa dimension especifica. No las cuatro a la vez. Una. Pequena si hace falta. Con fecha y con tu nombre.' },
-      { semana: 'Semanas 7-8', titulo: 'Protocolo de 24 horas', descripcion: 'Cualquier decision importante tomada bajo presion emocional alta se pospone 24 horas si la situacion lo permite. No es indecision. Es reconocer que el cerebro bajo estres no tiene acceso completo a su capacidad analitica. Capitulo 9.' },
-      { semana: 'Semanas 9-10', titulo: 'Salir de la zona ' + zonaD, descripcion: 'Identifica la decision mas antigua que la zona ' + zonaD + ' lleva postergando. Esta semana actua sobre ella aunque sea de forma parcial. La direccion importa mas que la perfeccion. Capitulo 5.' },
-      { semana: 'Semanas 11-12', titulo: 'La conversacion que falta', descripcion: 'Hay una conversacion pendiente que identificaste en estas semanas. Tenla. Con preparacion. Sin garantia de perfeccion. El Capitulo 10 tiene el protocolo. Seguir postergandola tiene un costo mayor que cualquier incomodidad.' }
-    ],
-    riesgo: 'Si no actuas en los proximos 90 dias el patron actual seguira consolidandose. La zona ' + zonaD + ' produce su propio costo energetico silencioso. La mecha de ' + mecha + ' seguira activandose ante los mismos detonadores. Y la cuota de ' + cuota + ' seguira subiendo sin senal de alarma visible. El Capitulo 7 describe la linea de no retorno con precision.\n\n' + (funcional ? 'El riesgo especifico del directivo funcional es que el colapso nunca llega de forma dramatica. Llega como apagamiento gradual. Un dia te das cuenta de que llevas anos funcionando por inercia. El momento para cambiarlo es siempre antes de ese dia.' : 'El punto de intervencion mas eficiente es ahora. No porque estes en crisis sino porque tienes recursos disponibles que en seis meses pueden no estar.'),
-    lecturas: 'Sapolsky, R. - Why Zebras Dont Get Ulcers: Para entender por que tu cuerpo lleva la cuenta aunque tu no la lleves. Especialmente relevante para tu cuota de ' + cuota + '.\n\nGoleman, D. - Inteligencia emocional: El capitulo sobre el secuestro amigdalino explica la mecanica de tu mecha de ' + mecha.toLowerCase() + '. Leerlo cambia como te ves cuando reaccionas.\n\nClear, J. - Habitos atomicos: El manual tecnico del Capitulo 10. Para implementar el plan de 90 dias sin el error de intentar cambiar todo a la vez.',
-    pregunta_cierre: 'En que momento exacto de esta semana actuaste como directivo cuando debias actuar como persona - y que habria cambiado si hubieras hecho lo contrario?',
-    coaching: [
-      'Cual es la diferencia entre quien eras antes del cargo y quien eres hoy, y que de esa diferencia elegiste conscientemente?',
-      'Cuando reaccionas con tu mecha, que es lo que en realidad estas protegiendo?',
-      'Si tu equipo pudiera decirte una cosa con total honestidad, que crees que diria?',
-      'Cual es la decision mas importante que llevas postergando y que te impide tomarla?',
-      'Como describes el exito en tu cargo y esa descripcion sigue siendo tuya o la heredaste del sistema?',
-      'Que le dirias a alguien que esta viviendo exactamente lo que tu vives ahora?',
-      'Donde esta el limite entre la exigencia que te impulsa y la que te destruye?',
-      'Que conversacion llevas tiempo postergando y que te cuesta mas, tenerla o no tenerla?',
-      'Si tu cuota mas critica es la que senala tu factura, que seria un primer paso real que puedes dar esta semana?',
-      'Que necesitas que alguien te diga en voz alta que todavia nadie te ha dicho?'
-    ],
-    coaching: [
-      'Cual es la diferencia entre quien eras antes del cargo y quien eres hoy - y que de esa diferencia elegiste conscientemente?',
-      'Cuando reaccionas con tu mecha de ' + mecha.toLowerCase() + ', que es lo que en realidad estas protegiendo?',
-      'Si tu equipo pudiera decirte una cosa con total honestidad, que crees que diria - y que harias con esa informacion?',
-      'Cual es la decision mas importante que llevas postergando y que te impide tomarla realmente?',
-      'Como describes el exito en tu cargo - y esa descripcion sigue siendo tuya o la heredaste del sistema?',
-      'Que le dirias a alguien que esta viviendo exactamente lo que tu vives ahora en tu zona de ' + zonaD + '?',
-      'Donde esta el limite entre la exigencia que te impulsa y la exigencia que te destruye en tu trabajo diario?',
-      'Que conversacion llevas tiempo postergando con alguien importante - y que te cuesta mas: tenerla o no tenerla?',
-      'Si tu cuota mas critica es ' + cuota + ', que seria un primer paso pequeno pero real que puedes dar esta semana?',
-      'Que necesitas que alguien te diga en voz alta que todavia nadie te ha dicho?'
-    ]
-  };
 }
 
 function mostrarReporte(r) {
