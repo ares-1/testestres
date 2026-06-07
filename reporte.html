@@ -343,28 +343,36 @@ function generarReporte() {
   var t3zona2 = t3 ? t3.zonaSEG : '';
   var t4cuota = t4 ? t4.cuotaMasCritica : '';
   var t4nivel = t4 ? t4.titulo : '';
-  var esfuncional = t4 ? t4.esFuncional : false;
 
-  var prompt = 'Eres Enrique Berrueta Alvarez, pedagogo con 30 anos de experiencia directiva y autor del libro El ultimo en enterarse. Escribes en segunda persona directamente a ' + nombre_dir + '. Usas su nombre con naturalidad. Tu voz es la de un mentor-amigo, no un terapeuta ni un consultor corporativo. Eres directo, honesto y practico.\n\n'
-    + 'DATOS DEL DIRECTIVO:\n'
-    + 'Nombre: ' + nombre_dir + '\n'
-    + 'Cargo: ' + (directivo_cargo || 'no especificado') + '\n'
-    + 'Organizacion: ' + (directivo_org || 'no especificada') + '\n\n'
-    + 'RESULTADOS DE SUS CUATRO TESTS:\n'
-    + 'Test 1 - Ciclo: ' + t1titulo + ' (' + (t1 ? t1.puntuacion : '') + '/150, ' + (t1 ? t1.porcentaje : '') + '%). Seccion mas baja: ' + (t1 ? t1.seccionMasBaja : '') + '\n'
-    + 'Test 2 - Mecha: ' + t2tipo + ' (' + t2combo + '). Control ' + (t2 ? t2.mechaControl : '') + '% Reconocimiento ' + (t2 ? t2.mechaReconocimiento : '') + '% Lealtad ' + (t2 ? t2.mechaLealtad : '') + '% Limites ' + (t2 ? t2.mechaLimites : '') + '%\n'
-    + 'Test 3 - Zonas: ' + t3zona + ' (dominante) + ' + t3zona2 + ' (secundaria)' + (t3 && t3.alertaTrinchera ? ' - TRINCHERA ACTIVA' : '') + '\n'
-    + 'Test 4 - Factura: ' + t4nivel + ' (' + (t4 ? t4.porcentaje : '') + '%). Cuota critica: ' + t4cuota + '. Cuerpo ' + (t4 ? t4.cuerpo : '') + '/50 Relaciones ' + (t4 ? t4.relaciones : '') + '/50 Rendimiento ' + (t4 ? t4.rendimiento : '') + '/50 Identidad ' + (t4 ? t4.identidad : '') + '/50. Directivo funcional: ' + (esfuncional ? 'SI' : 'NO') + '\n\n'
-    + 'INSTRUCCIONES CRITICAS PARA CADA SECCION:\n\n'
-    + 'DIAGNOSTICO: 3 parrafos. Empieza con el nombre. Explica que significa su combinacion especifica de los 4 tests. Se concreto sobre lo que le esta pasando HOY, no en general. Usa ejemplos del tipo de situaciones que vive alguien con su mecha y zona especificas.\n\n'
-    + 'DINAMICA: 2 parrafos. Explica como su mecha de ' + t2tipo + ' opera dentro de la zona de ' + t3zona + ' y produce la factura en ' + t4cuota + '. Que pasa en su dia a dia concreto. Nada generico.\n\n'
-    + 'PLAN DE SEMANAS: 6 periodos de 2 semanas. Cada descripcion debe ser un PLAN DE ACCION CONCRETO con: que hace exactamente, como lo hace, con que frecuencia. Ejemplo de formato correcto: Durante estas dos semanas al terminar cada dia dedica 5 minutos a escribir en tu telefono el momento del dia donde sentiste que tu mecha se activo. Anota la hora, la situacion y como reaccionaste. Al terminar las dos semanas tendras un mapa real de tu patron. NO uses frases vagas como aplica la herramienta o trabaja en esto. Dile exactamente que hacer.\n\n'
-    + 'RIESGO: 2 parrafos honestos y directos. Que ocurre especificamente con su mecha de ' + t2tipo + ' y zona de ' + t3zona + ' si no actua. Sin catastrofismo pero sin suavizar.\n\n'
-    + 'LECTURAS: 3 libros de esta lista: Selye, Sapolsky, Goleman, Frankl, Marco Aurelio, Agassi, Clear, Edmondson, Covey. Para cada uno di exactamente que capitulo o concepto le sirve para su situacion especifica.\n\n'
-    + 'PREGUNTA DE CIERRE: Una sola pregunta. Que no sea generica. Que solo tenga sentido para alguien con su combinacion exacta de ' + t2tipo + ' en zona de ' + t3zona + ' con factura en ' + t4cuota + '.\n\n'
-    + 'COACHING: 10 planes de accion concretos para trabajar con un coach o mentor. Cada uno debe tener: accion especifica + como hacerla + duracion o frecuencia + que llevar a la sesion de coaching. NO son preguntas. Son tareas concretas que el directivo hace entre sesiones. Ejemplo: Esta semana antes de tu sesion de coaching identifica las 3 decisiones mas importantes que tomaste en los ultimos 7 dias. Para cada una anota si la tomaste desde la reflexion o desde la urgencia y que resultado tuvo. Lleva ese analisis escrito a tu sesion.\n\n'
-    + 'Responde UNICAMENTE con JSON valido. Sin texto antes ni despues. Sin markdown. Solo el JSON:\n'
-    + '{"perfil_nombre":"3-5 palabras que describan a ' + nombre_dir + ' especificamente","perfil_titulo":"titulo que empiece con ' + nombre_dir + ' y describa su situacion en 8-12 palabras","diagnostico":"parrafo1\n\nparrafo2\n\nparrafo3","dinamica":"parrafo1\n\nparrafo2","plan_semanas":[{"semana":"Semanas 1-2","titulo":"accion concreta","descripcion":"plan detallado de que hacer exactamente"},{"semana":"Semanas 3-4","titulo":"accion concreta","descripcion":"plan detallado"},{"semana":"Semanas 5-6","titulo":"accion concreta","descripcion":"plan detallado"},{"semana":"Semanas 7-8","titulo":"accion concreta","descripcion":"plan detallado"},{"semana":"Semanas 9-10","titulo":"accion concreta","descripcion":"plan detallado"},{"semana":"Semanas 11-12","titulo":"accion concreta","descripcion":"plan detallado"}],"riesgo":"parrafo1\n\nparrafo2","lecturas":"libro1 - capitulo o concepto exacto para ' + nombre_dir + '\n\nlibro2\n\nlibro3","pregunta_cierre":"pregunta unica y especifica para ' + nombre_dir + '","coaching":["plan concreto 1 con accion especifica duracion y que llevar al coach","plan 2","plan 3","plan 4","plan 5","plan 6","plan 7","plan 8","plan 9","plan 10"]}';
+  var prompt = 'Eres un consultor de liderazgo. Genera un reporte para ' + nombre_dir + ' con estos resultados: '
+    + 'Ciclo=' + t1titulo + ' | Mecha=' + t2tipo + '(' + t2combo + ') | Zona=' + t3zona + '+' + t3zona2 + ' | Factura=' + t4nivel + ' cuota critica=' + t4cuota + '. '
+    + 'Cargo=' + (directivo_cargo||'directivo') + ' Org=' + (directivo_org||'su organizacion') + '. '
+    + 'Responde SOLO JSON minificado sin saltos de linea en strings: '
+    + '{"perfil_nombre":"3 palabras que describan a ' + nombre_dir + '","perfil_titulo":"' + nombre_dir + ' + descripcion de su situacion en 10 palabras",'
+    + '"diagnostico":"Parrafo 1: que significa tener mecha de ' + t2tipo + ' en zona de ' + t3zona + ' para alguien como ' + nombre_dir + '. Parrafo 2: como su ciclo de ' + t1titulo + ' afecta sus decisiones diarias hoy. Parrafo 3: por que su factura critica en ' + t4cuota + ' es la prioridad real.",'
+    + '"dinamica":"Parrafo 1: como la mecha de ' + t2tipo + ' alimenta la zona de ' + t3zona + ' en el dia a dia de ' + nombre_dir + '. Parrafo 2: que patron concreto produce esto en su trabajo.",'
+    + '"plan_semanas":['
+    + '{"semana":"Semanas 1-2","titulo":"Mapa de detonadores","descripcion":"Cada noche ' + nombre_dir + ' anota en su telefono el momento exacto donde su mecha de ' + t2tipo + ' se activo: hora, situacion y reaccion. Al final de 2 semanas lleva ese mapa a su coach."},'
+    + '{"semana":"Semanas 3-4","titulo":"El Ancla en vivo","descripcion":"En cada reunion donde sienta que su mecha se activa, aplica 3 respiraciones antes de responder. Anota cuantas veces lo logro y cuantas no. Reporta el numero a su coach."},'
+    + '{"semana":"Semanas 5-6","titulo":"Cuota de ' + t4cuota + '","descripcion":"Identifica 3 momentos de esta semana donde la cuota de ' + t4cuota + ' se cobro. Define una sola accion pequena para reducir ese costo. Ejecutala y reporta el resultado."},'
+    + '{"semana":"Semanas 7-8","titulo":"Protocolo de decisiones","descripcion":"Toda decision importante se pospone 24 horas si fue tomada despues de las 6pm o bajo tension. Lleva un registro de cuantas decisions se beneficiaron de esa pausa."},'
+    + '{"semana":"Semanas 9-10","titulo":"Salida de ' + t3zona + '","descripcion":"Identifica el problema mas antiguo que la zona de ' + t3zona + ' lleva postergando. Da un paso visible aunque sea pequeno. Mide si algo se mueve."},'
+    + '{"semana":"Semanas 11-12","titulo":"La conversacion pendiente","descripcion":"Identifica la conversacion mas importante que ' + nombre_dir + ' lleva evitando. Preparala con su coach: que decir, como abrirla, como cerrarla. Tenla antes de terminar la semana 12."}],'
+    + '"riesgo":"Sin accion en 90 dias la mecha de ' + t2tipo + ' seguira activandose en la zona de ' + t3zona + ' y la cuota de ' + t4cuota + ' seguira subiendo. El patron se consolida y se vuelve invisible. El riesgo especifico para ' + nombre_dir + ' es el apagamiento gradual del directivo funcional.",'
+    + '"lecturas":"Sapolsky Why Zebras: entiende por que tu cuerpo en ' + t3zona + ' lleva la cuenta que tu no ves. Goleman Inteligencia Emocional: el secuestro amigdalino explica tu mecha de ' + t2tipo + ' con precision. Clear Habitos Atomicos: el manual para ejecutar este plan de 90 dias sin intentar todo a la vez.",'
+    + '"pregunta_cierre":"' + nombre_dir + ': si alguien de tu equipo describiera como estas operando ahora mismo, que diria que no te has atrevido a decirte a ti mismo?",'
+    + '"coaching":['
+    + '"Lleva a tu coach el mapa de 2 semanas de tu mecha de ' + t2tipo + '. Juntos identifican el patron especifico y disenan una intervencion a medida para los proximos 30 dias.",'
+    + '"Antes de cada sesion con tu coach revisa las 3 decisiones mas importantes de la semana. Clasifica cada una: tome desde la reflexion o desde la urgencia. Ese ejercicio define el foco del acompanamiento.",'
+    + '"Con tu coach haz una auditoria de 30 minutos de tu cuota de ' + t4cuota + ' en los ultimos 3 meses. Identifica los 5 momentos de mayor costo. El patron que aparece define la prioridad real.",'
+    + '"Prepara con tu coach la conversacion pendiente mas importante. Guion completo: apertura, desarrollo, cierre. Tenla antes de la siguiente sesion y reporta que paso exactamente.",'
+    + '"Disenha con tu coach tu protocolo personal para cuando entras a la zona de ' + t3zona + '. No el del libro, el tuyo. Que senales fisicas sientes primero? Que funciona para salir? Cuanto tiempo tienes antes de que se instale?",'
+    + '"Revision mensual: aplica el Test 1 el ultimo dia de cada mes. Comparte el resultado con tu coach. Si baja activan protocolo. Si sube celebran. El test se convierte en el termometro del proceso.",'
+    + '"Identifica con tu coach a 3 personas de tu entorno que pueden darte retroalimentacion honesta. Prepara la pregunta exacta del Capitulo 4. Tu coach te ayuda a procesar lo que escuchas.",'
+    + '"Disena con tu coach una valvula de emergencia especifica para tu mecha de ' + t2tipo + '. Que haces en los primeros 30 segundos cuando sientes que se activa? Practica el protocolo en sesion.",'
+    + '"Con tu coach define los 3 limites que nunca has dicho en voz alta en tu organizacion. Disenan juntos como ponerlos antes de que los cruzen. Implementa uno por mes.",'
+    + '"Al terminar las 12 semanas haz con tu coach una sesion de cierre: que cambio, que sigue igual, que viene despues. Define si continuas el proceso y con que objetivo especifico."'
+    + ']}';
 
     fetch('https://anthropic-proxy.berrueta-enrique.workers.dev', {
     method: 'POST',
@@ -385,8 +393,31 @@ function generarReporte() {
     var bar=document.getElementById("barra-ia"); if(bar){bar.style.width="100%";} var pc=document.getElementById("pct-txt"); if(pc){pc.textContent="100%";}
     console.log('API respuesta:', data);
     var texto = data.content && data.content[0] ? data.content[0].text : '';
+    console.log('Texto recibido (primeros 500 chars):', texto.substring(0,500));
+    // Limpiar el texto antes de parsear
+    texto = texto.trim();
+    // Quitar backticks y markdown si los hay
+    texto = texto.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+    // Encontrar el JSON
     var match = texto.match(/\{[\s\S]*\}/);
-    var r = JSON.parse(match ? match[0] : texto);
+    var jsonStr = match ? match[0] : texto;
+    // Limpiar caracteres problematicos dentro del JSON
+    // Reemplazar saltos de linea dentro de strings por espacio
+    jsonStr = jsonStr.replace(/:\s*"([^"]*?)"/g, function(m, s) {
+      return ': "' + s.replace(/\n/g, ' ').replace(/\r/g, ' ') + '"';
+    });
+    var r;
+    try {
+      r = JSON.parse(jsonStr);
+    } catch(e) {
+      console.error('JSON parse error:', e.message);
+      console.log('JSON que fallo (primeros 300):', jsonStr.substring(0,300));
+      // Intentar extraer lo que podamos
+      document.getElementById('div-cargando').style.display = 'none';
+      document.getElementById('div-listo').style.display = 'block';
+      document.getElementById('checks-listo').innerHTML = '<div style="color:var(--rojo);background:var(--rojo-c);border:1px solid var(--rojo);border-radius:4px;padding:1rem;font-size:15px;text-align:center">La IA genero una respuesta pero con formato incorrecto. Por favor intenta de nuevo.</div>';
+      return;
+    }
     mostrarReporte(r);
   })
   .catch(function(err) {
