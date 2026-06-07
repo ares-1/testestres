@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test 1 — ¿En qué punto del ciclo estás? | El último en enterarse</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --negro:#1A1A1A;--negro-suave:#2C2C2C;
+  --dorado:#C9A84C;--dorado-claro:#F5EDD6;--dorado-oscuro:#8B6914;
+  --azul:#1A5EA8;--azul-c:#EAF2FB;--azul-t:#0C447C;
+  --verde:#0F6E56;--verde-c:#E8F5F0;--verde-t:#085041;
+  --naranja:#BA7517;--naranja-c:#FDF3E3;--naranja-t:#633806;
+  --rojoo:#993C1D;--rojo-c:#FFF0E8;--rojo-t:#712B13;
+  --rojo:#A32D2D;--rojo-fc:#FCF0F0;--rojo-ft:#791F1F;
+  --borde:#E0E0DC;--gris:#F5F5F3;--texto:#222;--muted:#666;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F2F0EB;color:var(--texto);min-height:100vh}
+
+.encabezado{background:var(--negro);color:var(--dorado);padding:2rem 1.5rem 1.5rem;text-align:center;border-bottom:3px solid var(--dorado)}
+.encabezado .serie{font-size:12px;letter-spacing:.1em;opacity:.75;margin-bottom:6px;text-transform:uppercase;color:var(--dorado)}
+.encabezado h1{font-size:24px;font-weight:700;margin-bottom:6px;line-height:1.3;color:white}
+.encabezado p{font-size:14px;opacity:.85;color:var(--dorado)}
+
+.contenedor{max-width:740px;margin:0 auto;padding:1.5rem 1rem 3rem}
+
+.caja-intro{background:white;border:1px solid var(--borde);border-left:4px solid var(--dorado);border-radius:0 10px 10px 0;padding:1.25rem 1.5rem;margin-bottom:1.75rem}
+.caja-intro p{font-size:15px;line-height:1.7;color:#333}
+
+.datos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.75rem}
+.datos-grid .full{grid-column:1/-1}
+.campo label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.campo input{width:100%;padding:10px 14px;border:1px solid var(--borde);border-radius:8px;font-size:15px;color:var(--texto);background:white;transition:border .2s}
+.campo input:focus{outline:none;border-color:var(--dorado)}
+
+.barra-wrap{display:flex;align-items:center;gap:12px;margin:1.5rem 0;background:white;border:1px solid var(--borde);border-radius:10px;padding:.85rem 1.25rem;position:sticky;top:0;z-index:10}
+.barra-bg{flex:1;height:6px;background:#EEE;border-radius:3px}
+.barra-fill{height:6px;background:var(--dorado);border-radius:3px;transition:width .3s;width:0%}
+.barra-txt{font-size:13px;color:#999;min-width:55px;text-align:right}
+
+.sec-label{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8B6914;margin:2rem 0 .75rem;padding-bottom:6px;border-bottom:2px solid #F5EDD6}
+
+.item{background:white;border:1px solid var(--borde);border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:10px;transition:border-color .2s}
+.item.ok{border-color:var(--dorado);border-left:3px solid var(--dorado)}
+.item-txt{font-size:15px;line-height:1.6;color:#222;margin-bottom:.9rem}
+.esc-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.esc-lbl{font-size:12px;color:#999;min-width:72px}
+.esc-lbl.r{text-align:right}
+.esc-btns{display:flex;gap:6px;flex:1;justify-content:center}
+.esc-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--borde);background:white;font-size:14px;font-weight:600;color:#888;cursor:pointer;transition:all .15s}
+.esc-btn:hover{background:#F5EDD6;border-color:var(--dorado);color:#8B6914}
+.esc-btn.sel{background:var(--negro);border-color:var(--dorado);color:var(--dorado)}
+
+.btn-calcular{display:none;width:100%;padding:14px;background:var(--negro);color:var(--dorado);border:2px solid var(--dorado);border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:1.5rem;letter-spacing:.04em;transition:all .2s}
+.btn-calcular:hover{background:var(--dorado);color:var(--negro)}
+
+.resultado-wrap{display:none;margin-top:1.5rem}
+
+.res-header{border-radius:0 12px 12px 0;padding:1.5rem;margin-bottom:1.25rem;border-left:5px solid}
+.res-etiqueta{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.res-titulo{font-size:22px;font-weight:700;margin-bottom:10px}
+.res-desc{font-size:15px;line-height:1.75}
+
+.metricas{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.metrica{background:var(--gris);border-radius:8px;padding:1rem;text-align:center}
+.metrica-lbl{font-size:12px;color:#888;margin-bottom:4px}
+.metrica-val{font-size:22px;font-weight:700;color:var(--texto)}
+
+.grafica-wrap{background:white;border:1px solid var(--borde);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.grafica-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:1rem}
+.grafica-leyenda{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12px;color:#666;justify-content:center}
+.leyenda-item{display:flex;align-items:center;gap:4px}
+.leyenda-color{width:10px;height:10px;border-radius:2px}
+
+.recs-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:.75rem}
+.rec{background:white;border:1px solid var(--borde);border-left:4px solid;border-radius:0 10px 10px 0;padding:1.1rem 1.25rem;margin-bottom:10px}
+.rec-cap{font-size:13px;font-weight:700;margin-bottom:6px}
+.rec-txt{font-size:14px;line-height:1.75;color:#333}
+
+.caja-acciones{background:white;border:1px solid var(--borde);border-radius:12px;padding:1.25rem 1.5rem;margin-top:1.25rem}
+.caja-acciones h3{font-size:15px;font-weight:700;color:#333;margin-bottom:4px}
+.caja-acciones p{font-size:14px;color:#666;margin-bottom:.75rem}
+.correo-flex{display:flex;gap:8px;margin-bottom:8px}
+.correo-flex input{flex:1;padding:10px 14px;border:1px solid var(--borde);border-radius:8px;font-size:15px}
+.correo-flex input:focus{outline:none;border-color:var(--azul)}
+.btn-enviar{padding:10px 18px;background:var(--negro);color:var(--dorado);border:1px solid var(--dorado);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s}
+.btn-enviar:hover{background:var(--dorado);color:var(--negro)}
+.btn-enviar:disabled{background:#aaa;cursor:not-allowed}
+.btn-pdf{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:#F2F0EB;color:#444;border:1px solid var(--borde);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}
+.btn-pdf:hover{background:#EAEAE7}
+.msg{font-size:14px;margin-top:6px}
+.msg.ok{color:var(--verde)}
+.msg.err{color:var(--rojo)}
+
+.sig-test{background:var(--negro);border:1px solid var(--dorado);border-radius:10px;padding:1.1rem 1.5rem;margin-top:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.sig-test p{font-size:14px;color:var(--dorado);font-weight:700}
+.sig-test span{font-size:13px;color:#AAA}
+
+.pie{text-align:center;font-size:13px;color:#aaa;margin-top:3rem;padding-bottom:1rem}
+
+@media(max-width:500px){
+  .datos-grid{grid-template-columns:1fr}
+  .datos-grid .full{grid-column:1}
+  .metricas{grid-template-columns:1fr 1fr}
+  .esc-lbl{display:none}
+}
+
+@media print{
+  body{background:white!important}
+  .encabezado{background:var(--azul)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .barra-wrap,.btn-calcular,.caja-acciones,.sig-test,.pie{display:none!important}
+  .item{break-inside:avoid}
+  .resultado-wrap{display:block!important}
+  .sec-label,.rec,.grafica-wrap,.res-header,.metricas{break-inside:avoid}
+  .contenedor{padding:.5rem}
+  @page{margin:1.5cm}
+}
+</style>
+</head>
+<body>
+
+<div class="encabezado">
+  <div class="serie">El último en enterarse · Sistema de autodiagnóstico para directivos</div>
+  <h1>Test 1 — ¿En qué punto del ciclo estás?</h1>
+  <p>30 preguntas · 12–15 minutos · resultado inmediato con gráfica</p>
+</div>
+
+<div class="contenedor">
+
+  <div class="caja-intro">
+    <p>Responde pensando en las <strong>últimas cuatro semanas</strong>. No cómo quisieras estar — cómo estás. La primera respuesta suele ser la más honesta.<br><br>
+    <strong>1 = casi nunca &nbsp;·&nbsp; 2 = pocas veces &nbsp;·&nbsp; 3 = a veces &nbsp;·&nbsp; 4 = frecuentemente &nbsp;·&nbsp; 5 = casi siempre</strong></p>
+  </div>
+
+  <div class="datos-grid">
+    <div class="campo full"><label for="nombre">Nombre completo</label><input type="text" id="nombre" placeholder="Tu nombre"></div>
+    <div class="campo"><label for="cargo">Cargo</label><input type="text" id="cargo" placeholder="Director, Rector, Gerente..."></div>
+    <div class="campo"><label for="org">Organización</label><input type="text" id="org" placeholder="Tu institución"></div>
+  </div>
+
+  <div class="barra-wrap">
+    <div class="barra-bg"><div class="barra-fill" id="barra"></div></div>
+    <span class="barra-txt" id="barra-txt">0 / 30</span>
+  </div>
+
+  <div class="sec-label">A — Energía y recuperación</div>
+  <div class="item" data-i="1" data-s="A"><p class="item-txt">Termino el día con energía para estar presente con las personas que me importan.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(1,1)">1</button><button class="esc-btn" onclick="sel(1,2)">2</button><button class="esc-btn" onclick="sel(1,3)">3</button><button class="esc-btn" onclick="sel(1,4)">4</button><button class="esc-btn" onclick="sel(1,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="2" data-s="A"><p class="item-txt">Al final de la semana siento que descansé, no solo que sobreviví.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(2,1)">1</button><button class="esc-btn" onclick="sel(2,2)">2</button><button class="esc-btn" onclick="sel(2,3)">3</button><button class="esc-btn" onclick="sel(2,4)">4</button><button class="esc-btn" onclick="sel(2,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="3" data-s="A"><p class="item-txt">Me levanto sintiéndome recuperado, con ganas de empezar el día.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(3,1)">1</button><button class="esc-btn" onclick="sel(3,2)">2</button><button class="esc-btn" onclick="sel(3,3)">3</button><button class="esc-btn" onclick="sel(3,4)">4</button><button class="esc-btn" onclick="sel(3,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="4" data-s="A"><p class="item-txt">Descanso de verdad entre proyectos y no pospongo el descanso hasta que "esto termine".</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(4,1)">1</button><button class="esc-btn" onclick="sel(4,2)">2</button><button class="esc-btn" onclick="sel(4,3)">3</button><button class="esc-btn" onclick="sel(4,4)">4</button><button class="esc-btn" onclick="sel(4,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="5" data-s="A"><p class="item-txt">Tengo tiempo para mí durante la semana, no solo para el trabajo y las obligaciones.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(5,1)">1</button><button class="esc-btn" onclick="sel(5,2)">2</button><button class="esc-btn" onclick="sel(5,3)">3</button><button class="esc-btn" onclick="sel(5,4)">4</button><button class="esc-btn" onclick="sel(5,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="sec-label">B — Decisiones y claridad</div>
+  <div class="item" data-i="6" data-s="B"><p class="item-txt">Tomo mis decisiones importantes desde la reflexión, no desde la urgencia.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(6,1)">1</button><button class="esc-btn" onclick="sel(6,2)">2</button><button class="esc-btn" onclick="sel(6,3)">3</button><button class="esc-btn" onclick="sel(6,4)">4</button><button class="esc-btn" onclick="sel(6,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="7" data-s="B"><p class="item-txt">Al final del día reconozco mis decisiones como mías, decidí y no solo reaccioné.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(7,1)">1</button><button class="esc-btn" onclick="sel(7,2)">2</button><button class="esc-btn" onclick="sel(7,3)">3</button><button class="esc-btn" onclick="sel(7,4)">4</button><button class="esc-btn" onclick="sel(7,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="8" data-s="B"><p class="item-txt">Distingo con claridad lo urgente de lo importante y actúo en consecuencia.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(8,1)">1</button><button class="esc-btn" onclick="sel(8,2)">2</button><button class="esc-btn" onclick="sel(8,3)">3</button><button class="esc-btn" onclick="sel(8,4)">4</button><button class="esc-btn" onclick="sel(8,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="9" data-s="B"><p class="item-txt">Cuando tengo que decir que no, lo digo sin culpa ni explicaciones excesivas.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(9,1)">1</button><button class="esc-btn" onclick="sel(9,2)">2</button><button class="esc-btn" onclick="sel(9,3)">3</button><button class="esc-btn" onclick="sel(9,4)">4</button><button class="esc-btn" onclick="sel(9,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="10" data-s="B"><p class="item-txt">Mi cabeza está clara la mayor parte del día, no en modo supervivencia constante.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(10,1)">1</button><button class="esc-btn" onclick="sel(10,2)">2</button><button class="esc-btn" onclick="sel(10,3)">3</button><button class="esc-btn" onclick="sel(10,4)">4</button><button class="esc-btn" onclick="sel(10,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="sec-label">C — Presencia relacional</div>
+  <div class="item" data-i="11" data-s="C"><p class="item-txt">Las personas de mi equipo me traen sus problemas y no los resuelven solos para evitar mi reacción.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(11,1)">1</button><button class="esc-btn" onclick="sel(11,2)">2</button><button class="esc-btn" onclick="sel(11,3)">3</button><button class="esc-btn" onclick="sel(11,4)">4</button><button class="esc-btn" onclick="sel(11,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="12" data-s="C"><p class="item-txt">Cuando estoy con mi familia, estoy presente de verdad, no solo físicamente.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(12,1)">1</button><button class="esc-btn" onclick="sel(12,2)">2</button><button class="esc-btn" onclick="sel(12,3)">3</button><button class="esc-btn" onclick="sel(12,4)">4</button><button class="esc-btn" onclick="sel(12,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="13" data-s="C"><p class="item-txt">Las conversaciones importantes en mi vida siguen ocurriendo con naturalidad.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(13,1)">1</button><button class="esc-btn" onclick="sel(13,2)">2</button><button class="esc-btn" onclick="sel(13,3)">3</button><button class="esc-btn" onclick="sel(13,4)">4</button><button class="esc-btn" onclick="sel(13,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="14" data-s="C"><p class="item-txt">Las personas cercanas me dicen lo que piensan y no filtran lo que me cuentan.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(14,1)">1</button><button class="esc-btn" onclick="sel(14,2)">2</button><button class="esc-btn" onclick="sel(14,3)">3</button><button class="esc-btn" onclick="sel(14,4)">4</button><button class="esc-btn" onclick="sel(14,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="15" data-s="C"><p class="item-txt">Mi relación con el equipo tiene confianza real, no solo cumplimiento formal.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(15,1)">1</button><button class="esc-btn" onclick="sel(15,2)">2</button><button class="esc-btn" onclick="sel(15,3)">3</button><button class="esc-btn" onclick="sel(15,4)">4</button><button class="esc-btn" onclick="sel(15,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="sec-label">D — Señales del cuerpo</div>
+  <div class="item" data-i="16" data-s="D"><p class="item-txt">Me siento físicamente bien la mayoría de los días, sin señales de alarma recurrentes.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(16,1)">1</button><button class="esc-btn" onclick="sel(16,2)">2</button><button class="esc-btn" onclick="sel(16,3)">3</button><button class="esc-btn" onclick="sel(16,4)">4</button><button class="esc-btn" onclick="sel(16,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="17" data-s="D"><p class="item-txt">Duermo bien y me levanto sin tensión acumulada del día anterior.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(17,1)">1</button><button class="esc-btn" onclick="sel(17,2)">2</button><button class="esc-btn" onclick="sel(17,3)">3</button><button class="esc-btn" onclick="sel(17,4)">4</button><button class="esc-btn" onclick="sel(17,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="18" data-s="D"><p class="item-txt">Mi cuerpo descansa cuando dejo de trabajar y no sigue en alerta después de cerrar la oficina.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(18,1)">1</button><button class="esc-btn" onclick="sel(18,2)">2</button><button class="esc-btn" onclick="sel(18,3)">3</button><button class="esc-btn" onclick="sel(18,4)">4</button><button class="esc-btn" onclick="sel(18,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="19" data-s="D"><p class="item-txt">Hago ejercicio o movimiento físico con regularidad y no lo postergo indefinidamente.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(19,1)">1</button><button class="esc-btn" onclick="sel(19,2)">2</button><button class="esc-btn" onclick="sel(19,3)">3</button><button class="esc-btn" onclick="sel(19,4)">4</button><button class="esc-btn" onclick="sel(19,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="20" data-s="D"><p class="item-txt">Mi alimentación y mis hábitos físicos no han empeorado en los últimos meses.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(20,1)">1</button><button class="esc-btn" onclick="sel(20,2)">2</button><button class="esc-btn" onclick="sel(20,3)">3</button><button class="esc-btn" onclick="sel(20,4)">4</button><button class="esc-btn" onclick="sel(20,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="sec-label">E — Identidad y cargo</div>
+  <div class="item" data-i="21" data-s="E"><p class="item-txt">Sé quién soy cuando no estoy dirigiendo y tengo vida real fuera del cargo.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(21,1)">1</button><button class="esc-btn" onclick="sel(21,2)">2</button><button class="esc-btn" onclick="sel(21,3)">3</button><button class="esc-btn" onclick="sel(21,4)">4</button><button class="esc-btn" onclick="sel(21,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="22" data-s="E"><p class="item-txt">Recuerdo cómo era antes del cargo y me reconozco todavía en esa persona.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(22,1)">1</button><button class="esc-btn" onclick="sel(22,2)">2</button><button class="esc-btn" onclick="sel(22,3)">3</button><button class="esc-btn" onclick="sel(22,4)">4</button><button class="esc-btn" onclick="sel(22,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="23" data-s="E"><p class="item-txt">El cargo es lo que hago, no lo único que soy.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(23,1)">1</button><button class="esc-btn" onclick="sel(23,2)">2</button><button class="esc-btn" onclick="sel(23,3)">3</button><button class="esc-btn" onclick="sel(23,4)">4</button><button class="esc-btn" onclick="sel(23,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="24" data-s="E"><p class="item-txt">Cuando hay tiempo libre, lo disfruto y no me genera incomodidad o ansiedad.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(24,1)">1</button><button class="esc-btn" onclick="sel(24,2)">2</button><button class="esc-btn" onclick="sel(24,3)">3</button><button class="esc-btn" onclick="sel(24,4)">4</button><button class="esc-btn" onclick="sel(24,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="25" data-s="E"><p class="item-txt">Tengo conversaciones donde soy persona, no solo director.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(25,1)">1</button><button class="esc-btn" onclick="sel(25,2)">2</button><button class="esc-btn" onclick="sel(25,3)">3</button><button class="esc-btn" onclick="sel(25,4)">4</button><button class="esc-btn" onclick="sel(25,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="sec-label">F — La línea</div>
+  <div class="item" data-i="26" data-s="F"><p class="item-txt">Cuando reacciono con intensidad, lo reconozco como estrés acumulado, no como "soy así".</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(26,1)">1</button><button class="esc-btn" onclick="sel(26,2)">2</button><button class="esc-btn" onclick="sel(26,3)">3</button><button class="esc-btn" onclick="sel(26,4)">4</button><button class="esc-btn" onclick="sel(26,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="27" data-s="F"><p class="item-txt">No necesito una crisis activa para sentirme útil en mi trabajo.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(27,1)">1</button><button class="esc-btn" onclick="sel(27,2)">2</button><button class="esc-btn" onclick="sel(27,3)">3</button><button class="esc-btn" onclick="sel(27,4)">4</button><button class="esc-btn" onclick="sel(27,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="28" data-s="F"><p class="item-txt">Podría tomar una semana de descanso real sin sentir que todo colapsa o que yo colapso.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(28,1)">1</button><button class="esc-btn" onclick="sel(28,2)">2</button><button class="esc-btn" onclick="sel(28,3)">3</button><button class="esc-btn" onclick="sel(28,4)">4</button><button class="esc-btn" onclick="sel(28,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="29" data-s="F"><p class="item-txt">Si alguien de confianza me preguntara cómo estoy de verdad, podría responderle con honestidad.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(29,1)">1</button><button class="esc-btn" onclick="sel(29,2)">2</button><button class="esc-btn" onclick="sel(29,3)">3</button><button class="esc-btn" onclick="sel(29,4)">4</button><button class="esc-btn" onclick="sel(29,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+  <div class="item" data-i="30" data-s="F"><p class="item-txt">Cuando pienso en los próximos meses, siento que tengo margen y no que solo estoy aguantando.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(30,1)">1</button><button class="esc-btn" onclick="sel(30,2)">2</button><button class="esc-btn" onclick="sel(30,3)">3</button><button class="esc-btn" onclick="sel(30,4)">4</button><button class="esc-btn" onclick="sel(30,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <button class="btn-calcular" id="btn-calcular" onclick="calcular()">Ver mi resultado →</button>
+
+  <div class="resultado-wrap" id="resultado-wrap">
+
+    <div class="res-header" id="res-header">
+      <div class="res-etiqueta" id="res-etiqueta"></div>
+      <div class="res-titulo" id="res-titulo"></div>
+      <div class="res-desc" id="res-desc"></div>
+    </div>
+
+    <div class="metricas">
+      <div class="metrica"><div class="metrica-lbl">Puntuación total</div><div class="metrica-val" id="m-total"></div></div>
+      <div class="metrica"><div class="metrica-lbl">Nivel general</div><div class="metrica-val" id="m-pct"></div></div>
+      <div class="metrica"><div class="metrica-lbl">Sección prioritaria</div><div class="metrica-val" id="m-sec"></div></div>
+    </div>
+
+    <div class="grafica-wrap">
+      <div class="grafica-titulo">Tu perfil por dimensión</div>
+      <div style="position:relative;width:100%;height:280px;">
+        <canvas id="grafica" role="img" aria-label="Gráfica de barras con puntuación porcentual por sección"></canvas>
+      </div>
+      <div class="grafica-leyenda">
+        <span class="leyenda-item"><span class="leyenda-color" style="background:#1A5EA8"></span>Tu puntuación</span>
+        <span class="leyenda-item"><span class="leyenda-color" style="background:#E0E0DC"></span>Zona óptima (80%)</span>
+      </div>
+    </div>
+
+    <div class="recs-titulo">Qué hacer ahora</div>
+    <div class="rec" id="rec1"><div class="rec-cap" id="rec1-cap"></div><div class="rec-txt" id="rec1-txt"></div></div>
+    <div class="rec" id="rec2"><div class="rec-cap" id="rec2-cap"></div><div class="rec-txt" id="rec2-txt"></div></div>
+    <div class="rec" id="rec3"><div class="rec-cap" id="rec3-cap"></div><div class="rec-txt" id="rec3-txt"></div></div>
+
+    <div class="caja-acciones">
+      <h3>Guarda y comparte tu diagnóstico</h3>
+      <p>Recibe este resultado completo por correo o guárdalo como PDF.</p>
+      <div class="correo-flex">
+        <input type="email" id="correo" placeholder="tu@correo.com">
+        <button class="btn-enviar" id="btn-enviar" onclick="enviar()">Enviar →</button>
+      </div>
+      <p class="msg" id="msg-correo"></p>
+      <button class="btn-pdf" onclick="imprimirPDF()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+        Guardar como PDF
+      </button>
+    </div>
+
+    <div class="sig-test" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div>
+        <p>Continúa tu diagnóstico completo</p>
+        <span>Test 2 — ¿Cuál es tu mecha? · identifica tu detonador principal</span>
+      </div>
+      <a href="test2.html" style="background:var(--dorado,#C9A84C);color:#111;padding:.7rem 1.5rem;border-radius:2px;font-family:inherit;font-size:15px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;border:1.5px solid var(--dorado,#C9A84C);transition:all .2s">Siguiente test →</a>
+    </div>
+
+  </div>
+
+  <div class="pie">
+    Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com<br>
+    El último en enterarse · Sistema de autodiagnóstico para directivos
+  </div>
+
+</div>
+
+<script>
+emailjs.init('AS4JMWcosY0dk8FBl');
+
+const R={}, SEC={A:5,B:5,C:5,D:5,E:5,F:5};
+const NOM={A:'Energía',B:'Decisiones',C:'Relaciones',D:'Cuerpo',E:'Identidad',F:'La línea'};
+const COL={verde:'#0F6E56',naranja:'#BA7517',rojoo:'#993C1D',rojo:'#A32D2D'};
+let miGrafica=null;
+
+function sel(i,v){
+  const card=document.querySelector('[data-i="'+i+'"]');
+  card.querySelectorAll('.esc-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===v));
+  R[i]={v,s:card.getAttribute('data-s')};
+  card.classList.add('ok');
+  const n=Object.keys(R).length;
+  document.getElementById('barra').style.width=Math.round(n/30*100)+'%';
+  document.getElementById('barra-txt').textContent=n+' / 30';
+  document.getElementById('btn-calcular').style.display=n===30?'block':'none';
+}
+
+function calcular(){
+  let total=0;
+  const ss={A:0,B:0,C:0,D:0,E:0,F:0};
+  for(const k in R){total+=R[k].v;ss[R[k].s]+=R[k].v;}
+  const pcts={};
+  for(const s in ss) pcts[s]=Math.round((ss[s]/(SEC[s]*5))*100);
+  let sMin='A',vMin=999;
+  for(const s in pcts){if(pcts[s]<vMin){vMin=pcts[s];sMin=s;}}
+  const pct=Math.round((total/150)*100);
+
+  let etiq,tit,desc,c1,cf1,ct1,c2,cf2,ct2,c3,cf3,ct3,col,fondo;
+
+  if(total>=120){
+    etiq='Perfil 1 de 4';tit='Eustrés — zona productiva';
+    desc='Estás operando dentro de la curva. La presión trabaja para ti: decisiones con criterio, recuperación real, presencia en tus relaciones. El riesgo en esta zona no es el derrumbe sino la complacencia. El ciclo puede cambiar sin aviso y el directivo que no lo monitorea suele ser el último en verlo.';
+    cf1='#0F6E56';ct1='Capítulo 3 — Conoce tu detonador antes de salir de esta zona';
+    c1='El siguiente paso no es hacer más, es saber exactamente cuál es tu mecha antes de que la presión empiece a subir. El directivo en eustrés tiene una ventana de tiempo muy valiosa: puede diseñar sus válvulas en frío, cuando todavía no las necesita urgentemente. Ese diseño en frío es exactamente lo que separa al directivo que aguanta del que dura. Haz el Test 2 ahora que estás en tu mejor momento.';
+    cf2='#BA7517';ct2='Capítulo 9 — Diseña tus válvulas ahora, no cuando las necesites';
+    c2='Herbert Benson demostró que la respuesta de relajación es más eficaz como hábito establecido que como práctica de emergencia. El Protocolo de 24 horas y el ritual de cierre diario del Capítulo 9 funcionan mejor cuando todavía no los necesitas urgentemente. Instálalos esta semana, cuando el depósito está lleno, para que estén disponibles cuando empiece a vaciarse.';
+    cf3='#1A5EA8';ct3='Tu zona de atención — Sección '+NOM[sMin];
+    c3='Tu sección más baja es '+NOM[sMin]+'. Eso no significa que estés en crisis, significa que es tu punto de mayor vulnerabilidad cuando el ciclo empiece a bajar. Aplica el termómetro de tres preguntas del Capítulo 3 específicamente a esta dimensión durante los próximos siete días. Los datos reales son más honestos que la memoria.';
+    col='#0F6E56';fondo='#E8F5F0';
+  } else if(total>=90){
+    etiq='Perfil 2 de 4';tit='Señales de distrés — el agua se calienta';
+    desc='Estás en el tramo descendente de la curva. Todavía funciona todo, pero el costo ya está subiendo. Este es el momento más importante del ciclo: el punto de intervención más eficiente que existe. La factura no se ha consolidado. Todavía puedes elegir con relativa facilidad.';
+    cf1='#BA7517';ct1='Capítulo 6 — Identifica qué cuota está más activa';
+    c1='La factura del estrés crónico tiene cuatro cuotas: cuerpo, relaciones, rendimiento e identidad. Tu puntuación indica que al menos una ya está activa. Revisa el Capítulo 6 e identifica con honestidad cuál de las cuatro está más alta en este momento. Esa es tu prioridad, no las cuatro a la vez. El directivo que intenta resolver todo simultáneamente no resuelve nada.';
+    cf2='#BA7517';ct2='Capítulo 9 — Una válvula, bien puesta, durante cuatro semanas';
+    c2='Elige una sola válvula del Capítulo 9, la que más corresponda a tu sección más baja, e impleméntala con consistencia durante cuatro semanas. Solo una. No todas. James Clear documentó algo contraintuitivo: los cambios pequeños y sostenidos producen transformaciones más profundas que los cambios grandes y esporádicos. Una cosa bien hecha durante cuatro semanas produce un cambio más real que cuatro cosas mal hechas durante una semana.';
+    cf3='#1A5EA8';ct3='Esta semana — el termómetro de tres preguntas';
+    c3='Al final de cada jornada durante los próximos siete días hazte estas tres preguntas con puntuación del uno al diez: ¿Con cuánta energía termino comparado con cómo empecé? ¿Mis decisiones de hoy las reconozco como mías? ¿Las personas de mi entorno se acercaron o se alejaron hoy? No busques el diez, busca la tendencia. Los datos propios son más honestos que cualquier memoria selectiva.';
+    col='#BA7517';fondo='#FDF3E3';
+  } else if(total>=60){
+    etiq='Perfil 3 de 4';tit='Factura acumulándose — el directivo funcional';
+    desc='Sigues cumpliendo. Sigues llegando. Sigues tomando decisiones y liderando reuniones. Desde afuera, nada indica que hay un problema. Este es el perfil más peligroso del ciclo: la capacidad de seguir funcionando impide recibir la señal de alarma que el colapso habría enviado. El depósito lleva tiempo en rojo.';
+    cf1='#993C1D';ct1='Capítulo 6 — El directivo funcional y su factura silenciosa';
+    c1='Churchill es el ejemplo más documentado de este perfil. Durante años mantuvo niveles de productividad extraordinarios mientras la factura se acumulaba en salud, relaciones y calidad de vida. Nunca colapsó completamente, pero precisamente eso le impidió recibir la señal que habría cambiado las cosas antes. Lee el Capítulo 6 e identifica cuánto tiempo llevas pagando en cada dimensión. La duración importa porque determina cuánto trabajo de recuperación real hay por hacer.';
+    cf2='#993C1D';ct2='Capítulo 9 — El Ancla como primera herramienta';
+    c2='Antes de responder en cualquier situación que te active, aplica El Ancla: tres respiraciones y una pregunta interna — ¿estoy respondiendo a esto o a todo lo que cargaba antes de esto? No necesitas responder la pregunta. Solo formularla interrumpe el secuestro amigdalino y devuelve unos segundos de pensamiento real al proceso. Y unos segundos, en ese momento, cambian el resultado y el costo para las personas que te rodean.';
+    cf3='#993C1D';ct3='Capítulo 4 — La conversación más incómoda del libro';
+    c3='Elige a una persona de confianza real, alguien cuya situación no dependa de ti, y hazle tres preguntas concretas: ¿Cuándo notas que estoy más tenso de lo habitual? ¿Qué cambios ves en mí en esos momentos? ¿Hay algo que hayas dejado de contarme porque prevés mi reacción? No es una conversación cómoda. Pero la información que obtengas vale más que cualquier test de autodiagnóstico, incluido este.';
+    col='#993C1D';fondo='#FFF0E8';
+  } else {
+    etiq='Perfil 4 de 4';tit='Cerca de la línea de no retorno';
+    desc='El estrés ha dejado de ser un problema que tienes y se está convirtiendo en el sistema desde el que operas. Reconocer esto no es una condena, es la señal más importante que este test puede darte. La línea de no retorno no es un destino: es una advertencia. Y todavía estás a este lado de ella mientras puedas leer esta frase y reconocerte en ella.';
+    cf1='#A32D2D';ct1='Capítulo 7 — Nombra con precisión dónde estás';
+    c1='Lee de nuevo el Capítulo 7, específicamente la sección "Las señales de que se está cruzando". No para asustarte sino para nombrar con precisión dónde estás. Hay una diferencia importante entre los rasgos de carácter y los patrones de respuesta al estrés. Los primeros son difíciles de cambiar. Los segundos son modificables si se identifican como lo que son. Mientras los describes como "soy así", el sistema no puede cambiar. Cuando los ves como "es donde estoy ahora", la salida existe.';
+    cf2='#A32D2D';ct2='Capítulo 10 — Una cosa, esta semana, con fecha y nombre';
+    c2='No intentes cambiar todo a la vez. El plan que falla casi siempre tiene el mismo problema: es demasiado ambicioso al principio y demasiado frágil ante el primer obstáculo. Una cosa. Pequeña si hace falta. Con fecha y con tu nombre al pie. Eisenhower lo decía con precisión: una decisión sin fecha de ejecución no es una decisión, es un deseo. ¿Qué vas a hacer diferente esta semana y cuándo exactamente lo vas a hacer?';
+    cf3='#A32D2D';ct3='El libro tiene el mapa — pero el territorio pide compañía';
+    c3='Este libro fue escrito para el momento antes de la ruptura, y ese es exactamente el momento en que estás. Hay recursos y profesionales diseñados específicamente para este punto del ciclo. Buscar acompañamiento no es señal de debilidad, es la decisión más inteligente disponible ahora mismo. El directivo que reconoce el límite antes de que el límite lo reconozca a él es el que Jacinda Ardern describió cuando dijo: ya no tengo suficiente en el tanque para hacer este trabajo como se merece.';
+    col='#A32D2D';fondo='#FCF0F0';
+  }
+
+  const hdr=document.getElementById('res-header');
+  hdr.style.background=fondo;hdr.style.borderLeftColor=col;
+  document.getElementById('res-etiqueta').style.color=col;
+  document.getElementById('res-etiqueta').textContent=etiq;
+  document.getElementById('res-titulo').textContent=tit;
+  document.getElementById('res-titulo').style.color=col;
+  document.getElementById('res-desc').textContent=desc;
+  document.getElementById('m-total').textContent=total+' / 150';
+  document.getElementById('m-pct').textContent=pct+'%';
+  document.getElementById('m-pct').style.color=col;
+  document.getElementById('m-sec').textContent=NOM[sMin];
+  document.getElementById('m-sec').style.color=col;
+
+  ['rec1','rec2','rec3'].forEach(id=>document.getElementById(id).style.borderLeftColor=col);
+  document.getElementById('rec1-cap').textContent=ct1;document.getElementById('rec1-cap').style.color=cf1;document.getElementById('rec1-txt').textContent=c1;
+  document.getElementById('rec2-cap').textContent=ct2;document.getElementById('rec2-cap').style.color=cf2;document.getElementById('rec2-txt').textContent=c2;
+  document.getElementById('rec3-cap').textContent=ct3;document.getElementById('rec3-cap').style.color=cf3;document.getElementById('rec3-txt').textContent=c3;
+
+  if(miGrafica) miGrafica.destroy();
+  miGrafica=new Chart(document.getElementById('grafica'),{
+    type:'bar',
+    data:{
+      labels:['Energía','Decisiones','Relaciones','Cuerpo','Identidad','La línea'],
+      datasets:[
+        {label:'Tu puntuación',data:[pcts.A,pcts.B,pcts.C,pcts.D,pcts.E,pcts.F],backgroundColor:col,borderRadius:4,barPercentage:.55},
+        {label:'Zona óptima',data:[80,80,80,80,80,80],backgroundColor:'#E8EEF7',borderRadius:4,barPercentage:.55}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y+'%'}}},
+      scales:{
+        y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:12}},grid:{color:'#F0F0EE'}},
+        x:{ticks:{font:{size:12}},grid:{display:false}}
+      }
+    }
+  });
+
+  window._r={total,tit,desc,ct1,c1,ct2,c2,ct3,c3,pct,secMin:NOM[sMin],pcts};
+  document.getElementById('btn-calcular').style.display='none';
+  document.getElementById('resultado-wrap').style.display='block';
+  document.getElementById('resultado-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+
+  // Guardar en localStorage para reporte integrado
+  localStorage.setItem('test1_resultado', JSON.stringify({
+    titulo:tit, descripcion:desc,
+    puntuacion:total, maximo:150, porcentaje:pct,
+    seccionMasBaja:NOM[sMin],
+    secciones:pcts,
+    rec1titulo:ct1, rec1texto:c1,
+    rec2titulo:ct2, rec2texto:c2,
+    rec3titulo:ct3, rec3texto:c3,
+    fecha:new Date().toLocaleDateString('es-MX')
+  }));
+  localStorage.setItem('test1_visitado','1');
+}
+
+function imprimirPDF(){
+  window.print();
+}
+
+function enviar(){
+  const correo=document.getElementById('correo').value.trim();
+  const nombre=document.getElementById('nombre').value.trim()||'Directivo';
+  const cargo=document.getElementById('cargo').value.trim();
+  const org=document.getElementById('org').value.trim();
+  const msg=document.getElementById('msg-correo');
+  const btn=document.getElementById('btn-enviar');
+  if(!correo||!correo.includes('@')){msg.textContent='Escribe un correo válido.';msg.className='msg err';return;}
+  const r=window._r;
+  if(!r) return;
+  btn.disabled=true;btn.textContent='Enviando...';msg.textContent='';
+  const texto=
+    'PERFIL: '+r.tit+'\n'+
+    'Puntuación: '+r.total+' / 150 ('+r.pct+'%) · Sección prioritaria: '+r.secMin+'\n\n'+
+    r.desc+'\n\n'+
+    '━━━ QUÉ HACER AHORA ━━━\n\n'+
+    r.ct1+'\n'+r.c1+'\n\n'+
+    r.ct2+'\n'+r.c2+'\n\n'+
+    r.ct3+'\n'+r.c3+'\n\n'+
+    'PUNTUACIÓN POR SECCIÓN:\n'+
+    'Energía: '+r.pcts.A+'% · Decisiones: '+r.pcts.B+'% · Relaciones: '+r.pcts.C+'%\n'+
+    'Cuerpo: '+r.pcts.D+'% · Identidad: '+r.pcts.E+'% · La línea: '+r.pcts.F+'%\n\n'+
+    '━━━━━━━━━━━━━━━━━━━━━━━\n'+
+    'Para guardar tu diagnóstico en PDF entra a estres.ciemx.com y usa el botón "Guardar como PDF".\n\n'+
+    'Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com';
+  emailjs.send('service_j8od1sk','template_2h2t21c',{
+    nombre,cargo,organizacion:org,
+    puntuacion:r.total+' / 150',perfil:r.tit,
+    resultado:texto,to_email:correo
+  }).then(()=>{
+    msg.textContent='✓ Tu diagnóstico fue enviado a '+correo;msg.className='msg ok';
+    btn.textContent='Enviado ✓';
+  }).catch(()=>{
+    msg.textContent='Error al enviar. Verifica el correo e intenta de nuevo.';msg.className='msg err';
+    btn.disabled=false;btn.textContent='Enviar →';
+  });
+}
+</script>
+</body>
+</html>

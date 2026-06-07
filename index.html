@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El último en enterarse — Enrique Berrueta Alvarez</title>
+<meta name="description" content="Sistema de autodiagnóstico para directivos. Cuatro tests gratuitos basados en el libro El último en enterarse de Enrique Berrueta Alvarez.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --negro:#111111;
+  --negro-suave:#1E1E1E;
+  --dorado:#C9A84C;
+  --dorado-c:#F5EDD6;
+  --dorado-o:#8B6914;
+  --crema:#F7F3EC;
+  --crema-o:#EDE6D8;
+  --crema-d:#D9CEBC;
+  --texto:#2A2218;
+  --texto-s:#5C5040;
+  --texto-m:#8A7A65;
+  --borde:#D4C9A8;
+  --borde-s:#EDE6D8;
+  --azul:#1A5EA8;
+  --verde:#0F6E56;
+  --rojo:#A32D2D;
+  --naranja:#BA7517;
+  --purpura:#534AB7;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'Crimson Pro',Georgia,serif;background:var(--crema);color:var(--texto);min-height:100vh;overflow-x:hidden}
+
+/* ── NAVEGACIÓN ── */
+.nav-outer{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--negro);border-bottom:1px solid rgba(201,168,76,.25)}
+nav{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:62px}
+.nav-logo{font-family:'Playfair Display',serif;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:var(--dorado);text-decoration:none;flex-shrink:0}
+.nav-pages{display:flex;gap:0;align-items:center}
+.nav-btn{background:none;border:none;padding:.5rem 1.1rem;font-family:'Crimson Pro',serif;font-size:15px;color:rgba(247,243,236,.55);cursor:pointer;letter-spacing:.03em;transition:color .2s;position:relative;white-space:nowrap}
+.nav-btn::after{content:'';position:absolute;bottom:0;left:1.1rem;right:1.1rem;height:2px;background:var(--dorado);transform:scaleX(0);transform-origin:center;transition:transform .25s}
+.nav-btn:hover{color:rgba(247,243,236,.9)}
+.nav-btn.activo{color:var(--dorado)}
+.nav-btn.activo::after{transform:scaleX(1)}
+.nav-cta-btn{margin-left:1rem;background:var(--dorado);color:var(--negro);padding:.45rem 1.25rem;border-radius:2px;font-family:'Crimson Pro',serif;font-size:14px;font-weight:600;letter-spacing:.06em;border:none;cursor:pointer;transition:all .2s;white-space:nowrap}
+.nav-cta-btn:hover{background:var(--dorado-o);color:white}
+
+/* Hamburguesa móvil */
+.nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.5rem}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--dorado);border-radius:1px;transition:all .3s}
+.nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-hamburger.open span:nth-child(2){opacity:0}
+.nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.nav-mobile{display:none;position:fixed;top:62px;left:0;right:0;background:var(--negro);border-bottom:1px solid rgba(201,168,76,.2);z-index:199;padding:1rem 0;flex-direction:column}
+.nav-mobile.open{display:flex}
+.nav-mobile .nav-btn{text-align:left;padding:.75rem 2rem;font-size:17px}
+.nav-mobile .nav-cta-btn{margin:1rem 2rem;text-align:center;display:block}
+
+/* ── PÁGINAS ── */
+.pagina{display:none;min-height:100vh;padding-top:62px;animation:paginaEntra .4s ease both}
+.pagina.activa{display:block}
+@keyframes paginaEntra{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HERO / INICIO ── */
+.hero{
+  min-height:calc(100vh - 62px);
+  display:grid;grid-template-columns:1fr 1fr;
+  align-items:center;gap:4rem;
+  max-width:1200px;margin:0 auto;
+  padding:4rem 2rem 3rem;
+}
+.hero-kicker{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--dorado-o);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px}
+.hero-kicker::before{content:'';width:28px;height:1px;background:var(--dorado)}
+.hero-h1{font-family:'Playfair Display',serif;font-size:clamp(3rem,5.5vw,4.8rem);font-weight:700;line-height:1.05;color:var(--negro);margin-bottom:.5rem}
+.hero-h1 em{color:var(--dorado);font-style:italic}
+.hero-sub{font-size:17px;color:var(--texto-s);line-height:1.55;margin-bottom:.75rem;letter-spacing:.01em}
+.hero-autor{font-family:'Playfair Display',serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--texto-m);margin-bottom:2rem}
+.hero-tagline{font-size:19px;line-height:1.7;color:var(--texto-s);margin-bottom:2.5rem;border-left:3px solid var(--dorado);padding-left:1.25rem;font-style:italic}
+.hero-btns{display:flex;gap:.85rem;flex-wrap:wrap}
+
+/* Libro visual */
+.libro-portada{
+  width:260px;height:370px;
+  background:var(--negro);
+  border-radius:3px 10px 10px 3px;
+  border:1.5px solid var(--dorado);
+  box-shadow:10px 10px 40px rgba(17,17,17,.18),-2px 0 0 var(--dorado-o);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:2rem 1.75rem;text-align:center;
+  position:relative;margin:0 auto;
+}
+.libro-portada::before{content:'';position:absolute;left:0;top:8%;bottom:8%;width:5px;background:linear-gradient(to right,var(--dorado-o),var(--dorado));border-radius:2px 0 0 2px}
+.lp-coleccion{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dorado);margin-bottom:1.5rem}
+.lp-titulo{font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:white;line-height:1.2;margin-bottom:.5rem}
+.lp-titulo em{color:var(--dorado);font-style:italic}
+.lp-sub{font-size:10px;color:rgba(247,243,236,.45);line-height:1.5;margin-bottom:1.75rem;letter-spacing:.03em}
+.lp-linea{width:36px;height:1px;background:var(--dorado);margin:0 auto 1.5rem}
+.lp-autor{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dorado-o)}
+.lp-tag{position:absolute;top:.85rem;right:.85rem;background:var(--dorado);color:var(--negro);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:1px}
+
+/* Frase */
+.frase-banda{background:var(--negro);padding:4rem 2rem;text-align:center}
+.frase-banda p{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,3.5vw,2.6rem);font-weight:400;line-height:1.45;color:white;max-width:760px;margin:0 auto .75rem}
+.frase-banda p strong{color:var(--dorado);font-weight:700}
+.frase-banda span{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--dorado-o)}
+
+/* Pasos */
+.pasos{max-width:1100px;margin:0 auto;padding:4rem 2rem}
+.pasos-titulo{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,3vw,2.2rem);color:var(--negro);margin-bottom:.5rem}
+.pasos-titulo em{color:var(--dorado);font-style:italic}
+.pasos-sub{font-size:17px;color:var(--texto-s);margin-bottom:3rem;max-width:520px}
+.pasos-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem}
+.paso{padding:1.5rem 1.25rem;border-top:2px solid var(--borde);background:white;border-radius:0 0 6px 6px}
+.paso:hover{border-top-color:var(--dorado)}
+.paso-num{font-family:'Playfair Display',serif;font-size:38px;font-weight:700;color:rgba(201,168,76,.2);line-height:1;margin-bottom:.75rem}
+.paso-tit{font-family:'Playfair Display',serif;font-size:17px;color:var(--negro);margin-bottom:.5rem}
+.paso-desc{font-size:14px;line-height:1.6;color:var(--texto-s)}
+
+/* ── BOTONES ── */
+.btn-p{display:inline-block;background:var(--negro);color:var(--dorado);padding:.85rem 2rem;border-radius:2px;font-family:'Crimson Pro',serif;font-size:16px;font-weight:500;letter-spacing:.05em;text-decoration:none;border:1.5px solid var(--negro);transition:all .2s;cursor:pointer}
+.btn-p:hover{background:var(--dorado);color:var(--negro);border-color:var(--dorado)}
+.btn-s{display:inline-block;background:transparent;color:var(--negro);padding:.85rem 2rem;border-radius:2px;font-family:'Crimson Pro',serif;font-size:16px;letter-spacing:.05em;text-decoration:none;border:1.5px solid var(--borde);transition:all .2s;cursor:pointer}
+.btn-s:hover{border-color:var(--dorado);color:var(--dorado-o)}
+.btn-d{display:inline-block;background:var(--dorado);color:var(--negro);padding:.85rem 2rem;border-radius:2px;font-family:'Crimson Pro',serif;font-size:16px;font-weight:600;letter-spacing:.05em;text-decoration:none;border:1.5px solid var(--dorado);transition:all .2s;cursor:pointer}
+.btn-d:hover{background:var(--dorado-o);border-color:var(--dorado-o);color:white}
+
+/* ── SECCIÓN GENÉRICA ── */
+.sec{max-width:1100px;margin:0 auto;padding:4rem 2rem}
+.sec-kicker{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--dorado-o);margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.sec-kicker::before{content:'';width:24px;height:1px;background:var(--dorado)}
+.sec-h{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,3vw,2.6rem);color:var(--negro);margin-bottom:1rem;line-height:1.15}
+.sec-h em{color:var(--dorado);font-style:italic}
+.sec-p{font-size:18px;line-height:1.75;color:var(--texto-s);max-width:620px;margin-bottom:2rem}
+.divisor{border:none;border-top:1px solid var(--borde-s);margin:0}
+
+/* ── PÁGINA LIBRO ── */
+.libro-layout{display:grid;grid-template-columns:280px 1fr;gap:4rem;align-items:start}
+.caps-lista{margin-top:1.5rem}
+.cap{display:flex;gap:1rem;padding:.7rem 0;border-bottom:1px solid var(--borde-s);align-items:flex-start}
+.cap-n{font-family:'Playfair Display',serif;font-size:11px;letter-spacing:.08em;color:var(--dorado);min-width:26px;padding-top:2px}
+.cap-t{font-size:16px;color:var(--texto-s);line-height:1.4}
+.precios-row{display:flex;gap:1rem;margin-top:2rem;flex-wrap:wrap}
+.precio-box{flex:1;min-width:150px;background:white;border:1px solid var(--borde);border-radius:4px;padding:1.25rem}
+.pb-tipo{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dorado-o);margin-bottom:6px}
+.pb-monto{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--negro);margin-bottom:3px}
+.pb-desc{font-size:13px;color:var(--texto-m)}
+.libro-nota{margin-top:1.5rem;padding:1rem 1.25rem;background:var(--crema-o);border-left:3px solid var(--dorado);border-radius:0 4px 4px 0;font-size:14px;line-height:1.6;color:var(--texto-s)}
+
+/* ── PÁGINA TESTS ── */
+.tests-intro{background:var(--negro);padding:4rem 2rem;margin-bottom:0}
+.tests-intro-inner{max-width:1100px;margin:0 auto}
+.tests-intro h2{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);color:white;margin-bottom:.75rem}
+.tests-intro h2 em{color:var(--dorado);font-style:italic}
+.tests-intro p{font-size:18px;color:rgba(247,243,236,.65);max-width:620px;line-height:1.7}
+.tests-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;max-width:1100px;margin:2.5rem auto;padding:0 2rem}
+.test-card{background:white;border:1px solid var(--borde);border-radius:6px;padding:2rem;display:flex;flex-direction:column;text-decoration:none;color:inherit;transition:all .25s;position:relative;overflow:hidden}
+.test-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.test-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(17,17,17,.1);border-color:var(--dorado)}
+.test-card:hover::before{transform:scaleX(1)}
+.tc-num{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--dorado-o);margin-bottom:.75rem}
+.tc-nombre{font-family:'Playfair Display',serif;font-size:21px;color:var(--negro);margin-bottom:.6rem;line-height:1.2}
+.tc-desc{font-size:15px;line-height:1.65;color:var(--texto-s);flex:1;margin-bottom:1.25rem}
+.tc-meta{display:flex;gap:.75rem;align-items:center;font-size:12px;color:var(--texto-m);border-top:1px solid var(--borde-s);padding-top:1rem;flex-wrap:wrap}
+.tc-gratis{margin-left:auto;background:rgba(15,110,86,.1);color:var(--verde);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:1px;font-weight:600}
+.tc-flecha{margin-left:auto;color:var(--dorado);font-size:20px;transition:transform .2s}
+.test-card:hover .tc-flecha{transform:translateX(4px)}
+
+/* Barra de progreso tests */
+.tests-progreso{max-width:1100px;margin:0 auto;padding:0 2rem 3rem}
+.tp-titulo{font-size:14px;font-weight:600;color:var(--texto-s);margin-bottom:1rem;letter-spacing:.04em;text-transform:uppercase}
+.tp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}
+.tp-item{background:white;border:1px solid var(--borde);border-radius:4px;padding:.85rem;display:flex;align-items:center;gap:.75rem}
+.tp-check{width:28px;height:28px;border-radius:50%;border:2px solid var(--borde);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;transition:all .3s}
+.tp-check.hecho{background:var(--verde);border-color:var(--verde);color:white}
+.tp-check.pendiente{color:var(--texto-m)}
+.tp-info{min-width:0}
+.tp-nombre{font-size:13px;font-weight:600;color:var(--negro);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-estado{font-size:11px;color:var(--texto-m)}
+
+/* ── PÁGINA REPORTE ── */
+.reporte-hero{background:var(--negro);padding:5rem 2rem 4rem;border-bottom:1px solid rgba(201,168,76,.2)}
+.reporte-hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.rh-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);border-radius:2px;padding:.4rem 1rem;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dorado);margin-bottom:1.5rem}
+.rh-titulo{font-family:'Playfair Display',serif;font-size:clamp(2rem,3.5vw,3rem);color:white;margin-bottom:1rem;line-height:1.15}
+.rh-titulo em{color:var(--dorado);font-style:italic}
+.rh-desc{font-size:17px;line-height:1.75;color:rgba(247,243,236,.65);margin-bottom:2rem}
+.rh-precio{font-family:'Playfair Display',serif;font-size:42px;font-weight:700;color:var(--dorado);line-height:1}
+.rh-precio-sub{font-size:14px;color:rgba(247,243,236,.4);margin-bottom:1.5rem;margin-top:.25rem}
+
+/* Visual reporte */
+.reporte-visual{background:rgba(247,243,236,.04);border:1px solid rgba(201,168,76,.2);border-radius:6px;padding:1.75rem}
+.rv-head{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dorado);margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid rgba(201,168,76,.15)}
+.rv-fila{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(247,243,236,.06);font-size:14px}
+.rv-fila:last-of-type{border-bottom:none}
+.rv-label{color:rgba(247,243,236,.5)}
+.rv-val{color:var(--dorado);font-weight:500}
+.rv-barras{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid rgba(201,168,76,.1)}
+.rv-b-tit{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(247,243,236,.35);margin-bottom:.85rem}
+.rv-b{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
+.rv-b-lbl{font-size:12px;color:rgba(247,243,236,.45);width:85px;flex-shrink:0}
+.rv-b-bg{flex:1;height:5px;background:rgba(247,243,236,.08);border-radius:3px}
+.rv-b-fill{height:5px;border-radius:3px;background:var(--dorado)}
+.rv-ia{margin-top:1.25rem;background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.12);border-radius:4px;padding:1rem}
+.rv-ia-tit{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dorado);margin-bottom:6px}
+.rv-ia-txt{font-size:13px;line-height:1.65;color:rgba(247,243,236,.5);font-style:italic}
+
+/* Lista qué incluye */
+.incluye-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:1100px;margin:3rem auto 0;padding:0 2rem}
+.incluye-item{background:white;border:1px solid var(--borde);border-radius:6px;padding:1.5rem;display:flex;gap:1rem;align-items:flex-start}
+.ii-icono{width:36px;height:36px;border-radius:50%;background:var(--crema-o);border:1px solid var(--borde);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.ii-titulo{font-family:'Playfair Display',serif;font-size:16px;color:var(--negro);margin-bottom:4px}
+.ii-desc{font-size:14px;line-height:1.6;color:var(--texto-s)}
+
+/* Pago */
+.pago-section{max-width:1100px;margin:3rem auto;padding:0 2rem}
+.pago-card{background:var(--negro);border:1.5px solid var(--dorado);border-radius:6px;padding:2.5rem;display:flex;gap:3rem;align-items:center;flex-wrap:wrap}
+.pc-texto{flex:1;min-width:260px}
+.pc-titulo{font-family:'Playfair Display',serif;font-size:22px;color:white;margin-bottom:.5rem}
+.pc-desc{font-size:16px;line-height:1.7;color:rgba(247,243,236,.6);margin-bottom:1.25rem}
+.pc-pasos{list-style:none}
+.pc-pasos li{font-size:14px;color:rgba(247,243,236,.55);padding:.3rem 0;display:flex;gap:8px}
+.pc-pasos li::before{content:'→';color:var(--dorado);flex-shrink:0}
+.pc-precio-wrap{text-align:center;flex-shrink:0}
+.pc-precio{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;color:var(--dorado);line-height:1}
+.pc-moneda{font-size:16px;color:rgba(247,243,236,.4);margin-bottom:1.25rem}
+.pc-nota{font-size:12px;color:rgba(247,243,236,.3);margin-top:.5rem}
+
+/* ── PÁGINA COLECCIÓN ── */
+.coleccion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.col-card{background:white;border:1px solid var(--borde);border-radius:6px;padding:2rem;position:relative;overflow:hidden;transition:all .25s}
+.col-card:hover{border-color:var(--dorado);transform:translateY(-2px);box-shadow:0 6px 24px rgba(17,17,17,.08)}
+.col-num{font-family:'Playfair Display',serif;font-size:64px;font-weight:700;color:rgba(201,168,76,.1);position:absolute;top:.5rem;right:1.25rem;line-height:1}
+.col-publico{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--dorado-o);margin-bottom:.75rem}
+.col-titulo{font-family:'Playfair Display',serif;font-size:21px;color:var(--negro);margin-bottom:.75rem;line-height:1.2}
+.col-desc{font-size:15px;line-height:1.65;color:var(--texto-s);margin-bottom:1.25rem}
+.col-badge{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:1px;font-weight:600}
+.badge-ok{background:rgba(15,110,86,.1);color:var(--verde)}
+.badge-pronto{background:rgba(90,80,64,.08);color:var(--texto-m);border:1px solid var(--borde)}
+.col-precio{font-size:15px;color:var(--texto-m);margin-top:.75rem}
+.col-precio strong{color:var(--negro);font-weight:600}
+
+/* ── PÁGINA AUTOR ── */
+.autor-layout{display:grid;grid-template-columns:300px 1fr;gap:4rem;align-items:start}
+.autor-tarjeta{background:white;border:1px solid var(--borde);border-radius:6px;padding:2.5rem;text-align:center;position:sticky;top:80px}
+.at-iniciales{font-family:'Playfair Display',serif;font-size:64px;font-weight:700;color:var(--dorado);line-height:1;margin-bottom:.5rem}
+.at-nombre{font-family:'Playfair Display',serif;font-size:20px;color:var(--negro);margin-bottom:.25rem}
+.at-credencial{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--texto-m);margin-bottom:1.5rem}
+.at-linea{width:40px;height:1px;background:var(--dorado);margin:0 auto 1.5rem}
+.at-contacto{font-size:15px;color:var(--dorado-o);text-decoration:none;display:block;margin-bottom:.5rem}
+.at-contacto:hover{color:var(--dorado)}
+.at-web{font-size:13px;color:var(--texto-m)}
+
+.autor-bio p{font-size:18px;line-height:1.8;color:var(--texto-s);margin-bottom:1.25rem}
+.autor-logros{list-style:none;margin:1.5rem 0 2rem}
+.autor-logros li{font-size:16px;color:var(--texto-s);padding:.5rem 0;border-bottom:1px solid var(--borde-s);display:flex;gap.75rem;gap:10px}
+.autor-logros li::before{content:'—';color:var(--dorado);flex-shrink:0}
+.libros-autor{margin-top:2rem}
+.la-titulo{font-family:'Playfair Display',serif;font-size:20px;color:var(--negro);margin-bottom:1rem}
+.la-grid{display:grid;gap:.75rem}
+.la-item{background:var(--crema-o);border:1px solid var(--borde);border-radius:4px;padding:1rem 1.25rem}
+.la-serie{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dorado-o);margin-bottom:3px}
+.la-nombre{font-size:16px;color:var(--negro);font-weight:500}
+.la-ano{font-size:13px;color:var(--texto-m)}
+
+/* ── FOOTER ── */
+footer{background:var(--negro);padding:2.5rem 2rem;border-top:1px solid rgba(201,168,76,.15)}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:gap}
+.footer-logo{font-family:'Playfair Display',serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--dorado)}
+.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+.footer-links button{background:none;border:none;font-family:'Crimson Pro',serif;font-size:14px;color:rgba(247,243,236,.4);cursor:pointer;transition:color .2s;padding:0}
+.footer-links button:hover{color:var(--dorado)}
+.footer-copy{font-size:12px;color:rgba(247,243,236,.2);letter-spacing:.04em}
+
+/* ── RESPONSIVO ── */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;text-align:center;gap:2.5rem;padding:3rem 1.5rem}
+  .hero-kicker,.hero-tagline{justify-content:center;text-align:left}
+  .hero-btns{justify-content:center}
+  .libro-layout{grid-template-columns:1fr}
+  .tests-grid{grid-template-columns:1fr;padding:0 1.5rem}
+  .tests-progreso{padding:0 1.5rem 2rem}
+  .tp-grid{grid-template-columns:1fr 1fr}
+  .reporte-hero-inner{grid-template-columns:1fr}
+  .incluye-grid{grid-template-columns:1fr;padding:0 1.5rem}
+  .pago-section{padding:0 1.5rem}
+  .coleccion-grid{grid-template-columns:1fr}
+  .autor-layout{grid-template-columns:1fr}
+  .autor-tarjeta{position:static}
+  .pasos-grid{grid-template-columns:1fr 1fr}
+  .nav-pages,.nav-cta-btn{display:none}
+  .nav-hamburger{display:flex}
+  .footer-inner{flex-direction:column;gap:1rem;text-align:center}
+  .sec{padding:3rem 1.5rem}
+}
+@media(max-width:500px){
+  .pasos-grid{grid-template-columns:1fr}
+  .tp-grid{grid-template-columns:1fr}
+  .precios-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVEGACIÓN -->
+<div class="nav-outer">
+  <nav>
+    <a href="#" class="nav-logo" onclick="irA('inicio');return false">estres.ciemx.com</a>
+    <div class="nav-pages">
+      <button class="nav-btn activo" onclick="irA('inicio')">Inicio</button>
+      <button class="nav-btn" onclick="irA('libro')">El libro</button>
+      <button class="nav-btn" onclick="irA('tests')">Los tests</button>
+      <button class="nav-btn" onclick="irA('reporte')">Reporte IA</button>
+      <button class="nav-btn" onclick="irA('coleccion')">La colección</button>
+      <button class="nav-btn" onclick="irA('autor')">El autor</button>
+      <a href="reporte.html" class="nav-btn" style="color:var(--dorado);font-weight:600;border:1px solid rgba(201,168,76,.3);border-radius:2px;padding:.4rem .85rem">Mi reporte →</a>
+    </div>
+    <button class="nav-cta-btn" onclick="irA('tests')">Aplicar test gratis</button>
+    <button class="nav-hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="nav-mobile" id="nav-mobile">
+    <button class="nav-btn" onclick="irA('inicio');toggleMenu()">Inicio</button>
+    <button class="nav-btn" onclick="irA('libro');toggleMenu()">El libro</button>
+    <button class="nav-btn" onclick="irA('tests');toggleMenu()">Los tests</button>
+    <button class="nav-btn" onclick="irA('reporte');toggleMenu()">Reporte IA</button>
+    <button class="nav-btn" onclick="irA('coleccion');toggleMenu()">La colección</button>
+    <button class="nav-btn" onclick="irA('autor');toggleMenu()">El autor</button>
+    <a href="reporte.html" class="nav-btn" style="color:var(--dorado);font-weight:600;padding:.75rem 2rem;text-align:left;text-decoration:none">Mi reporte integrado →</a>
+    <button class="nav-cta-btn" onclick="irA('tests');toggleMenu()">Aplicar test gratis</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PÁGINA: INICIO ═══════════════ -->
+<div class="pagina activa" id="p-inicio">
+
+  <section class="hero">
+    <div>
+      <div class="hero-kicker">Sistema de autodiagnóstico para directivos</div>
+      <h1 class="hero-h1">El último en<br><em>enterarse</em></h1>
+      <p class="hero-sub">El estrés directivo que no ves, la línea que no debes cruzar y lo que todavía puedes hacer</p>
+      <p class="hero-autor">Enrique Berrueta Alvarez · Pedagogo</p>
+      <p class="hero-tagline">Tu equipo ya lo sabe. Tu familia ya lo sabe. Tu cuerpo ya lo sabe.</p>
+      <div class="hero-btns">
+        <button class="btn-d" onclick="irA('tests')">Aplicar el test — gratis</button>
+        <button class="btn-s" onclick="irA('libro')">Conocer el libro</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center">
+      <div class="libro-portada" style="padding:0;overflow:hidden;background:#111">
+        <img src="libro.jpg" alt="El último en enterarse — Enrique Berrueta Alvarez" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:2px 9px 9px 2px">
+      </div>
+    </div>
+  </section>
+
+  <div class="frase-banda">
+    <p>Tu equipo ya lo sabe.<br>Tu familia ya lo sabe.<br>Tu cuerpo ya lo sabe.<br><strong>Tú eres el último en enterarse.</strong></p>
+    <span>El último en enterarse · Enrique Berrueta Alvarez</span>
+  </div>
+
+  <section class="pasos">
+    <div class="sec-kicker">Cómo funciona</div>
+    <h2 class="pasos-titulo">De la lectura al diagnóstico<br>en cuatro <em>pasos</em></h2>
+    <p class="pasos-sub">El libro establece el mapa. Los tests lo aplican a tu situación real. El reporte integra todo en un plan de acción.</p>
+    <div class="pasos-grid">
+      <div class="paso">
+        <div class="paso-num">01</div>
+        <div class="paso-tit">Lee el libro</div>
+        <div class="paso-desc">Establece el modelo: ciclo, zonas, mecha, factura y la línea que no debes cruzar. Los tests cobran su verdadero sentido cuando conoces el mapa.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">02</div>
+        <div class="paso-tit">Aplica los 4 tests</div>
+        <div class="paso-desc">Cada test es gratuito y tarda entre 10 y 18 minutos. Resultado inmediato con gráfica, diagnóstico por dimensión y recomendaciones con capítulo exacto.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">03</div>
+        <div class="paso-tit">Genera el reporte</div>
+        <div class="paso-desc">Al terminar los 4 tests la IA cruza todos tus resultados y genera tu diagnóstico personalizado en 30 segundos. 6 páginas. Tu plan de 90 días semana a semana.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">04</div>
+        <div class="paso-tit">Actúa con el plan</div>
+        <div class="paso-desc">Calibrado para tu mecha, tu zona y tu nivel de factura. No es genérico. Es tuyo. Con la válvula específica para tu situación y el capítulo exacto del libro.</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ═══════════════ PÁGINA: EL LIBRO ═══════════════ -->
+<div class="pagina" id="p-libro">
+  <div class="sec">
+    <div class="sec-kicker">El libro</div>
+    <div class="libro-layout">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1.5rem">
+        <div class="libro-portada" style="width:220px;height:310px;padding:0;overflow:hidden;background:#111">
+          <img src="libro.jpg" alt="El último en enterarse" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:2px 9px 9px 2px">
+        </div>
+        <div class="precios-row" style="width:100%;flex-direction:column">
+          <div class="precio-box">
+            <div class="pb-tipo">Digital PDF</div>
+            <div class="pb-monto">$399 <span style="font-size:16px;color:var(--texto-m)">MXN</span></div>
+            <div class="pb-desc">Descarga inmediata</div>
+          </div>
+          <div class="precio-box">
+            <div class="pb-tipo">Impreso</div>
+            <div class="pb-monto">$499 <span style="font-size:16px;color:var(--texto-m)">MXN</span></div>
+            <div class="pb-desc">Envío incluido</div>
+          </div>
+        </div>
+        <a href="mailto:contacto@ciemx.com?subject=Quiero el libro El último en enterarse" class="btn-d" style="width:100%;text-align:center">Conseguir el libro</a>
+      </div>
+      <div>
+        <h2 class="sec-h">No es autoayuda.<br>Es el espejo que <em>mereces</em>.</h2>
+        <p class="sec-p">Este libro está escrito para el momento antes de la ruptura. Para ese territorio donde todo funciona y sin embargo algo no cuadra. Donde el directivo lleva meses operando al límite sin reconocerlo por su nombre.</p>
+        <p style="font-size:16px;line-height:1.7;color:var(--texto-s);margin-bottom:1.5rem">No pretende enseñar. Lo que sí tiene es el mapa de algunas zonas que muchos directores atraviesan solos, en silencio, convencidos de que son los únicos que han estado ahí. No son los únicos.</p>
+        <div class="caps-lista">
+          <div class="cap"><span class="cap-n">01</span><span class="cap-t">El enemigo que paga renta en tu cabeza y tú ni lo sabes</span></div>
+          <div class="cap"><span class="cap-n">02</span><span class="cap-t">El cargo te quiere convertir en otra cosa</span></div>
+          <div class="cap"><span class="cap-n">03</span><span class="cap-t">Hay un estrés que te impulsa y uno que te destruye — ¿sabes cuál tienes tú?</span></div>
+          <div class="cap"><span class="cap-n">04</span><span class="cap-t">Todos lo veían menos él — y ese él probablemente eres tú</span></div>
+          <div class="cap"><span class="cap-n">05</span><span class="cap-t">No tienes un problema. Vives en él.</span></div>
+          <div class="cap"><span class="cap-n">06</span><span class="cap-t">El estrés no perdonado siempre cobra, con intereses</span></div>
+          <div class="cap"><span class="cap-n">07</span><span class="cap-t">La línea que no puedes cruzar</span></div>
+          <div class="cap"><span class="cap-n">08</span><span class="cap-t">La mecha corta no es tu carácter, es tu historia acumulada</span></div>
+          <div class="cap"><span class="cap-n">09</span><span class="cap-t">Las válvulas de escape</span></div>
+          <div class="cap"><span class="cap-n">10</span><span class="cap-t">Tu plan de salida — porque seguir igual también es una decisión</span></div>
+        </div>
+        <div class="libro-nota">El libro incluye acceso vía QR al sistema de 4 tests de autodiagnóstico en estres.ciemx.com — sin costo adicional.</div>
+        <div style="margin-top:1.5rem;display:flex;gap:.85rem;flex-wrap:wrap">
+          <a href="mailto:contacto@ciemx.com?subject=Quiero el libro El último en enterarse" class="btn-d">Conseguir el libro</a>
+          <button class="btn-s" onclick="irA('tests')">Primero aplicar el test</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PÁGINA: LOS TESTS ═══════════════ -->
+<div class="pagina" id="p-tests">
+  <div class="tests-intro">
+    <div class="tests-intro-inner">
+      <div class="sec-kicker" style="color:rgba(201,168,76,.6)">Sistema de autodiagnóstico</div>
+      <h2>Cuatro tests.<br>Un diagnóstico <em>completo</em>.</h2>
+      <p>Cada test es gratuito, independiente y entrega resultados inmediatos con gráfica y recomendaciones concretas ancladas al capítulo exacto del libro. Juntos forman el diagnóstico directivo más completo disponible.</p>
+    </div>
+  </div>
+
+  <div class="tests-progreso" style="padding-top:2rem">
+    <div class="tp-titulo">Tu progreso</div>
+    <div class="tp-grid" id="progreso-grid">
+      <div class="tp-item">
+        <div class="tp-check" id="ch1">1</div>
+        <div class="tp-info"><div class="tp-nombre">Ciclo</div><div class="tp-estado" id="est1">Pendiente</div></div>
+      </div>
+      <div class="tp-item">
+        <div class="tp-check" id="ch2">2</div>
+        <div class="tp-info"><div class="tp-nombre">Mecha</div><div class="tp-estado" id="est2">Pendiente</div></div>
+      </div>
+      <div class="tp-item">
+        <div class="tp-check" id="ch3">3</div>
+        <div class="tp-info"><div class="tp-nombre">Zonas</div><div class="tp-estado" id="est3">Pendiente</div></div>
+      </div>
+      <div class="tp-item">
+        <div class="tp-check" id="ch4">4</div>
+        <div class="tp-info"><div class="tp-nombre">La Factura</div><div class="tp-estado" id="est4">Pendiente</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1100px;margin:0 auto;padding:0 2rem 1rem">
+    <div style="background:#FDF3E3;border:1px solid #D4A050;border-left:4px solid #BA7517;border-radius:0 6px 6px 0;padding:1rem 1.25rem;display:flex;gap:.75rem;align-items:flex-start">
+      <span style="font-size:18px;flex-shrink:0">⚠</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#633806;margin-bottom:3px">Importante para recibir tu reporte integrado</div>
+        <div style="font-size:14px;line-height:1.6;color:#7A5020">Los cuatro tests deben hacerse <strong>desde este mismo navegador y dispositivo</strong>. Tus respuestas se guardan automáticamente aquí. Si cambias de navegador o dispositivo tendrás que repetir los tests. Al terminar los cuatro, el botón de tu reporte aparecerá disponible.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tests-grid">
+    <a href="test1.html" class="test-card" style="--c:#1A5EA8" onclick="marcarVisita(1)" >
+      <style>.test-card:nth-child(1)::before{background:#1A5EA8}</style>
+      <div class="tc-num">Test 1 de 4 · ¿En qué punto del ciclo estás?</div>
+      <div class="tc-nombre">El ciclo del estrés directivo</div>
+      <div class="tc-desc">Identifica en qué fase estás operando ahora: eustrés productivo, señales de distrés, factura acumulándose o cerca de la línea de no retorno. 30 ítems en 6 dimensiones con gráfica de resultados.</div>
+      <div class="tc-meta"><span>30 preguntas</span><span>·</span><span>~12 min</span><span>·</span><span>4 perfiles</span><span class="tc-gratis">Gratis</span></div>
+    </a>
+    <a href="test2.html" class="test-card" onclick="marcarVisita(2)">
+      <style>.test-card:nth-child(2)::before{background:#BA7517}</style>
+      <div class="tc-num">Test 2 de 4 · ¿Cuál es tu mecha?</div>
+      <div class="tc-nombre">Tu detonador y tipología</div>
+      <div class="tc-desc">Descubre tu patrón de reacción bajo presión y tu tipología directiva: El Perfecto, El Blindado, El Volcán, El Herido, El Invisible o El Vigilante. Lectura combinada de mecha dominante y secundaria.</div>
+      <div class="tc-meta"><span>20 preguntas</span><span>·</span><span>~10 min</span><span>·</span><span>6 tipologías</span><span class="tc-gratis">Gratis</span></div>
+    </a>
+    <a href="test3.html" class="test-card" onclick="marcarVisita(3)">
+      <style>.test-card:nth-child(3)::before{background:#0F6E56}</style>
+      <div class="tc-num">Test 3 de 4 · ¿En qué zona estás operando?</div>
+      <div class="tc-nombre">Las cinco zonas de problema</div>
+      <div class="tc-desc">Identifica en cuál de las cinco zonas del Capítulo 5 tienes instalada tu oficina: Niebla, Fuego, Pantano, Espejo o Trinchera. Alerta especial si aparece la zona más peligrosa del sistema.</div>
+      <div class="tc-meta"><span>25 preguntas</span><span>·</span><span>~12 min</span><span>·</span><span>5 zonas</span><span class="tc-gratis">Gratis</span></div>
+    </a>
+    <a href="test4.html" class="test-card" onclick="marcarVisita(4)">
+      <style>.test-card:nth-child(4)::before{background:#A32D2D}</style>
+      <div class="tc-num">Test 4 de 4 · ¿Cuánto te está costando?</div>
+      <div class="tc-nombre">La Factura</div>
+      <div class="tc-desc">El test más importante del sistema. Mide el costo real del estrés en cuatro dimensiones: cuerpo, relaciones, rendimiento e identidad. 40 ítems con diagnóstico extendido y detección del directivo funcional.</div>
+      <div class="tc-meta"><span>40 preguntas</span><span>·</span><span>~18 min</span><span>·</span><span>4 dimensiones</span><span class="tc-gratis">Gratis</span></div>
+    </a>
+  </div>
+
+  <div style="text-align:center;padding:2rem 2rem 4rem">
+    <p style="font-size:16px;color:var(--texto-s);margin-bottom:1.25rem">¿Ya terminaste los 4 tests? Genera tu reporte integrado personalizado.</p>
+    <a href="reporte.html" class="btn-p" style="display:inline-block;text-decoration:none">Ir a mi reporte integrado →</a>
+    <p style="font-size:13px;color:var(--texto-m);margin-top:.75rem">Disponible cuando hayas completado los 4 tests en este navegador</p>
+  </div>
+</div>
+
+<!-- ═══════════════ PÁGINA: REPORTE IA ═══════════════ -->
+<div class="pagina" id="p-reporte">
+  <div class="reporte-hero">
+    <div class="reporte-hero-inner">
+      <div>
+        <div class="rh-badge"><span>◆</span> Producto premium</div>
+        <h2 class="rh-titulo">Tu diagnóstico completo.<br>Tu plan de 90 días.<br><em>Personalizado.</em></h2>
+        <p class="rh-desc">Cuando terminas los cuatro tests la inteligencia artificial cruza todos tus resultados, los procesa con el modelo del libro y la bibliografía completa, y genera un reporte narrativo único de 6 páginas con tu perfil directivo integrado y un plan de acción semana a semana.</p>
+        <div class="rh-precio">$699 <span style="font-size:20px;color:rgba(247,243,236,.35)">MXN</span></div>
+        <div class="rh-precio-sub">Pago único · Acceso inmediato al terminar los 4 tests · PDF descargable</div>
+        <button class="btn-d" onclick="irA('tests')">Comenzar con el Test 1</button>
+      </div>
+      <div class="reporte-visual">
+        <div class="rv-head">Ejemplo — Diagnóstico cruzado</div>
+        <div class="rv-fila"><span class="rv-label">Test 1 — Ciclo</span><span class="rv-val">Señales de distrés</span></div>
+        <div class="rv-fila"><span class="rv-label">Test 2 — Mecha</span><span class="rv-val">El Volcán</span></div>
+        <div class="rv-fila"><span class="rv-label">Test 3 — Zona</span><span class="rv-val">Fuego + Trinchera</span></div>
+        <div class="rv-fila"><span class="rv-label">Test 4 — Factura</span><span class="rv-val">Alta en relaciones</span></div>
+        <div class="rv-barras">
+          <div class="rv-b-tit">Nivel de factura por dimensión</div>
+          <div class="rv-b"><span class="rv-b-lbl">Cuerpo</span><div class="rv-b-bg"><div class="rv-b-fill" style="width:52%"></div></div></div>
+          <div class="rv-b"><span class="rv-b-lbl">Relaciones</span><div class="rv-b-bg"><div class="rv-b-fill" style="width:78%"></div></div></div>
+          <div class="rv-b"><span class="rv-b-lbl">Rendimiento</span><div class="rv-b-bg"><div class="rv-b-fill" style="width:61%"></div></div></div>
+          <div class="rv-b"><span class="rv-b-lbl">Identidad</span><div class="rv-b-bg"><div class="rv-b-fill" style="width:44%"></div></div></div>
+        </div>
+        <div class="rv-ia">
+          <div class="rv-ia-tit">Diagnóstico narrativo generado por IA</div>
+          <div class="rv-ia-txt">"Estás en distrés con mecha de volcán operando en zona de fuego con trinchera activa. Tu factura más alta es en relaciones. Esta combinación específica produce un patrón donde el agotamiento se acumula en silencio mientras el directivo sigue funcionando desde afuera..."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="incluye-grid">
+    <div class="incluye-item">
+      <div class="ii-icono">◆</div>
+      <div><div class="ii-titulo">Diagnóstico cruzado narrativo</div><div class="ii-desc">No un resumen de los cuatro tests sino la historia de cómo se relacionan entre sí. Qué significa tu combinación específica de ciclo, mecha, zona y factura.</div></div>
+    </div>
+    <div class="incluye-item">
+      <div class="ii-icono">◈</div>
+      <div><div class="ii-titulo">Perfil directivo integrado</div><div class="ii-desc">Tu tipología completa cruzando los cuatro tests. Con nombre, descripción y dinámica específica para tu combinación — más rico que cualquier test individual.</div></div>
+    </div>
+    <div class="incluye-item">
+      <div class="ii-icono">◉</div>
+      <div><div class="ii-titulo">Plan de 90 días semana a semana</div><div class="ii-desc">Basado en el Capítulo 10 del libro. Semana 1 observas X, semana 2 implementas Y. Concreto, no genérico. Calibrado para tu mecha y tu zona específica.</div></div>
+    </div>
+    <div class="incluye-item">
+      <div class="ii-icono">◇</div>
+      <div><div class="ii-titulo">La pregunta que nadie te ha hecho</div><div class="ii-desc">Generada específicamente para tu combinación de resultados. No una pregunta genérica del libro — una pregunta que solo tiene sentido para tu situación.</div></div>
+    </div>
+    <div class="incluye-item">
+      <div class="ii-icono">○</div>
+      <div><div class="ii-titulo">Mapa de riesgo</div><div class="ii-desc">Qué puede ocurrir si no actúas en los próximos 90 días, basado en tu nivel de factura y tu proximidad a la línea de no retorno del Capítulo 7.</div></div>
+    </div>
+    <div class="incluye-item">
+      <div class="ii-icono">□</div>
+      <div><div class="ii-titulo">Bibliografía personalizada</div><div class="ii-desc">Los tres libros de la bibliografía del libro que más corresponden a tu perfil específico, con la razón exacta por qué ese libro y no otro.</div></div>
+    </div>
+  </div>
+
+  <div class="pago-section">
+    <div class="pago-card">
+      <div class="pc-texto">
+        <div class="pc-titulo">¿Cómo funciona el pago?</div>
+        <div class="pc-desc">Todo ocurre en el mismo navegador, sin crear cuenta y sin esperar. En menos de dos minutos tienes tu reporte.</div>
+        <ul class="pc-pasos">
+          <li>Terminas los 4 tests gratuitos</li>
+          <li>Llegas a la página de reporte con tus resultados guardados</li>
+          <li>Pagas $699 MXN vía MercadoPago o tarjeta</li>
+          <li>Al confirmar el pago la IA genera tu reporte en 30 segundos</li>
+          <li>Lo recibes en pantalla, por correo y como PDF descargable</li>
+        </ul>
+      </div>
+      <div class="pc-precio-wrap">
+        <div class="pc-precio">$699</div>
+        <div class="pc-moneda">MXN · Pago único</div>
+        <button class="btn-d" onclick="irA('tests')">Empezar ahora</button>
+        <div class="pc-nota">Los tests son gratuitos.<br>El reporte tiene costo.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════ PÁGINA: COLECCIÓN ═══════════════ -->
+<div class="pagina" id="p-coleccion">
+  <div class="sec">
+    <div class="sec-kicker">La colección completa</div>
+    <h2 class="sec-h">Tres libros.<br>Un mismo <em>universo</em>.</h2>
+    <p class="sec-p">Tres libros independientes, cada uno completo en sí mismo, construidos sobre el mismo modelo del estrés y el liderazgo. No es una serie — es una colección. Puedes leerlos en cualquier orden.</p>
+    <div class="coleccion-grid">
+      <div class="col-card">
+        <div class="col-num">1</div>
+        <div class="col-publico">Para directivos</div>
+        <div class="col-titulo">El último en enterarse</div>
+        <div class="col-desc">El estrés directivo que no ves, la línea que no debes cruzar y lo que todavía puedes hacer. Con sistema de 4 tests de autodiagnóstico en estres.ciemx.com.</div>
+        <span class="col-badge badge-ok">Disponible</span>
+        <div class="col-precio">Digital <strong>$399</strong> · Impreso <strong>$499</strong> MXN</div>
+        <div style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap">
+          <a href="mailto:contacto@ciemx.com?subject=Quiero el libro El último en enterarse" class="btn-d" style="font-size:14px;padding:.6rem 1.25rem">Conseguir</a>
+          <button class="btn-s" onclick="irA('tests')" style="font-size:14px;padding:.6rem 1.25rem">Ver tests</button>
+        </div>
+      </div>
+      <div class="col-card">
+        <div class="col-num">2</div>
+        <div class="col-publico">Para parejas y familias</div>
+        <div class="col-titulo">El estrés al que nos acostumbramos</div>
+        <div class="col-desc">El manejo del estrés en la vida ordinaria, la pareja y la familia. Un acompañamiento práctico para reconocer y gestionar el estrés en los vínculos más importantes.</div>
+        <span class="col-badge badge-ok">Disponible</span>
+        <div class="col-precio">Consulta precios y disponibilidad</div>
+        <div style="margin-top:1rem">
+          <a href="mailto:contacto@ciemx.com?subject=Quiero el libro El estrés al que nos acostumbramos" class="btn-d" style="font-size:14px;padding:.6rem 1.25rem">Conseguir</a>
+        </div>
+      </div>
+      <div class="col-card" style="opacity:.8">
+        <div class="col-num">3</div>
+        <div class="col-publico">Para líderes</div>
+        <div class="col-titulo">Capitán o Amigable</div>
+        <div class="col-desc">Los perfiles de liderazgo bajo presión y cómo se respaldan mutuamente. El tercer libro de la colección sobre estrés y liderazgo directivo.</div>
+        <span class="col-badge badge-pronto">Próximamente</span>
+      </div>
+    </div>
+
+    <div style="margin-top:3rem;background:var(--crema-o);border:1px solid var(--borde);border-radius:6px;padding:2rem;display:flex;gap:2rem;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px">
+        <div class="sec-kicker" style="margin-bottom:.5rem">Colección Armonía Conyugal</div>
+        <h3 style="font-family:'Playfair Display',serif;font-size:20px;color:var(--negro);margin-bottom:.5rem">También del mismo autor</h3>
+        <p style="font-size:15px;color:var(--texto-s);line-height:1.6">Enrique Berrueta Alvarez publicó en 2026 dos libros de la Colección Armonía Conyugal: <em>Sanar las Raíces</em> y <em>Conexión e Intimidad</em>.</p>
+      </div>
+      <a href="mailto:contacto@ciemx.com?subject=Colección Armonía Conyugal" class="btn-s">Consultar</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PÁGINA: EL AUTOR ═══════════════ -->
+<div class="pagina" id="p-autor">
+  <div class="sec">
+    <div class="sec-kicker">El autor</div>
+    <div class="autor-layout">
+      <div class="autor-tarjeta">
+        <div class="at-iniciales">EB</div>
+        <div class="at-nombre">Enrique Berrueta Alvarez</div>
+        <div class="at-credencial">Pedagogo</div>
+        <div class="at-linea"></div>
+        <a href="mailto:contacto@ciemx.com" class="at-contacto">contacto@ciemx.com</a>
+        <div class="at-web">estres.ciemx.com</div>
+      </div>
+      <div class="autor-bio">
+        <h2 class="sec-h" style="margin-bottom:1.5rem">Treinta años <em>adentro</em> del sistema</h2>
+        <p>No escribo esto desde la distancia cómoda del que observa. Lo escribo desde la memoria viva del que vivió muchas de estas situaciones — con sus errores, sus aprendizajes y sus momentos de honestidad incómoda.</p>
+        <p>A lo largo de muchos años trabajando en responsabilidades directivas y acompañando a colegas, amigos y familias como orientador, caminé junto a muchos directores. Algunos brillantes, otros extraordinariamente competitivos y exitosos, todos comprometidos, muchos al límite sin saberlo. Y fui también, en distintos momentos, ese directivo.</p>
+        <p>Lo que sí tengo es el mapa de algunas zonas que muchos directores atraviesan solos, en silencio, convencidos de que son los únicos que han estado ahí. No son los únicos. Nunca lo han sido.</p>
+        <ul class="autor-logros">
+          <li>Pedagogo y directivo escolar por más de 30 años</li>
+          <li>Orientador familiar con experiencia en acompañamiento institucional y personal</li>
+          <li>Acompañamiento a directivos, docentes y familias en procesos de desarrollo</li>
+          <li>Autor de la Colección sobre el Estrés — 2026</li>
+          <li>Autor de la Colección Armonía Conyugal — 2026</li>
+        </ul>
+        <div class="libros-autor">
+          <div class="la-titulo">Publicaciones</div>
+          <div class="la-grid">
+            <div class="la-item"><div class="la-serie">Colección Estrés · Libro 1</div><div class="la-nombre">El último en enterarse</div><div class="la-ano">2026 · Para directivos</div></div>
+            <div class="la-item"><div class="la-serie">Colección Estrés · Libro 2</div><div class="la-nombre">El estrés al que nos acostumbramos</div><div class="la-ano">2026 · Para parejas y familias</div></div>
+            <div class="la-item"><div class="la-serie">Colección Armonía Conyugal</div><div class="la-nombre">Sanar las Raíces</div><div class="la-ano">2026</div></div>
+            <div class="la-item"><div class="la-serie">Colección Armonía Conyugal</div><div class="la-nombre">Conexión e Intimidad</div><div class="la-ano">2026</div></div>
+          </div>
+        </div>
+        <div style="margin-top:2rem;display:flex;gap:.85rem;flex-wrap:wrap">
+          <a href="mailto:contacto@ciemx.com" class="btn-p">Contactar al autor</a>
+          <button class="btn-s" onclick="irA('libro')">Ver los libros</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">estres.ciemx.com</div>
+    <div class="footer-links">
+      <button onclick="irA('inicio')">Inicio</button>
+      <button onclick="irA('libro')">El libro</button>
+      <button onclick="irA('tests')">Los tests</button>
+      <button onclick="irA('reporte')">Reporte IA</button>
+      <button onclick="irA('coleccion')">La colección</button>
+      <button onclick="irA('autor')">El autor</button>
+    </div>
+    <div class="footer-copy">© 2026 Enrique Berrueta Alvarez · Todos los derechos reservados</div>
+  </div>
+</footer>
+
+<script>
+// ── NAVEGACIÓN ──
+const paginas={
+  inicio:'p-inicio',
+  libro:'p-libro',
+  tests:'p-tests',
+  reporte:'p-reporte',
+  coleccion:'p-coleccion',
+  autor:'p-autor'
+};
+
+function irA(id){
+  // Ocultar todas
+  document.querySelectorAll('.pagina').forEach(p=>p.classList.remove('activa'));
+  // Mostrar la seleccionada
+  const el=document.getElementById('p-'+id);
+  if(el){el.classList.add('activa');window.scrollTo(0,0)}
+  // Marcar nav activo
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.toggle('activo',b.textContent.trim()===nombreNav(id));
+  });
+  // Hash en URL
+  history.replaceState(null,'','#'+id);
+  // Actualizar progreso si vamos a tests
+  if(id==='tests') actualizarProgreso();
+}
+
+function nombreNav(id){
+  const m={inicio:'Inicio',libro:'El libro',tests:'Los tests',reporte:'Reporte IA',coleccion:'La colección',autor:'El autor'};
+  return m[id]||'';
+}
+
+// Hamburguesa
+function toggleMenu(){
+  const h=document.getElementById('hamburger');
+  const m=document.getElementById('nav-mobile');
+  h.classList.toggle('open');
+  m.classList.toggle('open');
+}
+
+// ── PROGRESO DE TESTS ──
+function marcarVisita(n){
+  localStorage.setItem('test'+n+'_visitado','1');
+}
+
+function actualizarProgreso(){
+  for(let i=1;i<=4;i++){
+    const hecho=localStorage.getItem('test'+i+'_visitado')==='1';
+    const ch=document.getElementById('ch'+i);
+    const est=document.getElementById('est'+i);
+    if(ch&&est){
+      if(hecho){
+        ch.classList.add('hecho');
+        ch.textContent='✓';
+        est.textContent='Completado';
+      } else {
+        ch.classList.remove('hecho');
+        ch.textContent=i;
+        est.textContent='Pendiente';
+      }
+    }
+  }
+}
+
+// ── INICIO ──
+// Leer hash de URL al cargar
+const hash=window.location.hash.replace('#','');
+if(hash&&paginas[hash]) irA(hash);
+else irA('inicio');
+
+actualizarProgreso();
+</script>
+</body>
+</html>

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte Integrado — El último en enterarse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --negro:#111111;--dorado:#C9A84C;--dorado-c:#F5EDD6;--dorado-o:#8B6914;
+  --crema:#F7F3EC;--crema-o:#EDE6D8;--borde:#D4C9A8;--borde-s:#EDE6D8;
+  --texto:#2A2218;--texto-s:#5C5040;--texto-m:#8A7A65;
+  --verde:#0F6E56;--verde-c:#E8F5F0;--rojo:#A32D2D;--rojo-c:#FCF0F0;
+  --naranja:#BA7517;--naranja-c:#FDF3E3;--azul:#1A5EA8;--azul-c:#EAF2FB;
+  --purpura:#534AB7;
+}
+body{font-family:'Crimson Pro',Georgia,serif;background:var(--crema);color:var(--texto);min-height:100vh}
+.nav-outer{background:var(--negro);border-bottom:1px solid rgba(201,168,76,.25);padding:0 2rem}
+nav{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px}
+.nav-logo{font-family:'Playfair Display',serif;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:var(--dorado);text-decoration:none}
+.nav-back{background:none;border:1px solid rgba(201,168,76,.3);color:var(--dorado);padding:.4rem 1rem;border-radius:2px;font-family:'Crimson Pro',serif;font-size:14px;cursor:pointer;transition:all .2s}
+.nav-back:hover{background:var(--dorado);color:var(--negro)}
+
+.contenedor{max-width:900px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+
+/* ESTADO INICIAL */
+.estado-wrap{text-align:center;padding:4rem 2rem}
+.estado-icon{font-size:48px;margin-bottom:1rem}
+.estado-titulo{font-family:'Playfair Display',serif;font-size:26px;color:var(--negro);margin-bottom:.75rem}
+.estado-desc{font-size:17px;line-height:1.7;color:var(--texto-s);max-width:500px;margin:0 auto 2rem}
+.tests-check{display:flex;flex-direction:column;gap:.5rem;max-width:360px;margin:0 auto 2rem;text-align:left}
+.tc-row{display:flex;align-items:center;gap:.75rem;padding:.6rem .75rem;background:white;border:1px solid var(--borde);border-radius:4px;font-size:15px;color:var(--texto-s)}
+.tc-row.ok{border-color:var(--verde);background:var(--verde-c)}
+.tc-row.ok .tc-ico{color:var(--verde);font-weight:700}
+.tc-row.pend .tc-ico{color:var(--borde)}
+.btn-ir{display:inline-block;background:var(--negro);color:var(--dorado);padding:.8rem 1.75rem;border-radius:2px;font-family:'Crimson Pro',serif;font-size:16px;font-weight:500;letter-spacing:.05em;border:1.5px solid var(--negro);cursor:pointer;text-decoration:none;transition:all .2s;margin:.25rem}
+.btn-ir:hover{background:var(--dorado);color:var(--negro);border-color:var(--dorado)}
+.btn-ir-s{display:inline-block;background:transparent;color:var(--negro);padding:.8rem 1.75rem;border-radius:2px;font-family:'Crimson Pro',serif;font-size:16px;letter-spacing:.05em;border:1.5px solid var(--borde);cursor:pointer;text-decoration:none;transition:all .2s;margin:.25rem}
+.btn-ir-s:hover{border-color:var(--dorado);color:var(--dorado-o)}
+
+/* CARGANDO */
+.cargando{text-align:center;padding:5rem 2rem;display:none}
+.spinner{width:48px;height:48px;border:3px solid var(--borde);border-top-color:var(--dorado);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1.5rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cargando-titulo{font-family:'Playfair Display',serif;font-size:22px;color:var(--negro);margin-bottom:.5rem}
+.cargando-desc{font-size:16px;color:var(--texto-s)}
+.cargando-pasos{list-style:none;margin:1.5rem auto;max-width:360px;text-align:left}
+.cargando-pasos li{font-size:14px;color:var(--texto-m);padding:.3rem 0;display:flex;gap:8px;align-items:center}
+.cargando-pasos li.activo{color:var(--dorado-o);font-weight:600}
+.cargando-pasos li::before{content:'·';color:var(--dorado)}
+.cargando-pasos li.activo::before{content:'→'}
+
+/* REPORTE GENERADO */
+.reporte-generado{display:none}
+
+.reporte-header{background:var(--negro);border-radius:8px;padding:2.5rem;margin-bottom:1.5rem;border:1.5px solid var(--dorado)}
+.rh-serie{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dorado);margin-bottom:.75rem}
+.rh-nombre{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:rgba(247,243,236,.6);margin-bottom:.25rem}
+.rh-titulo{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;color:white;margin-bottom:.5rem;line-height:1.15}
+.rh-titulo em{color:var(--dorado);font-style:italic}
+.rh-fecha{font-size:13px;color:rgba(247,243,236,.3);letter-spacing:.06em}
+
+/* RESUMEN 4 TESTS */
+.resumen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem}
+.res-card{background:white;border:1px solid var(--borde);border-radius:6px;padding:1.25rem;border-top:3px solid}
+.rc-num{font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.rc-resultado{font-family:'Playfair Display',serif;font-size:17px;color:var(--negro);margin-bottom:4px;line-height:1.2}
+.rc-sub{font-size:13px;color:var(--texto-m)}
+
+/* BLOQUE IA */
+.ia-bloque{background:white;border:1px solid var(--borde);border-radius:8px;padding:2rem;margin-bottom:1.25rem}
+.ia-kicker{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--dorado-o);margin-bottom:.75rem;display:flex;align-items:center;gap:8px}
+.ia-kicker::before{content:'';width:20px;height:1px;background:var(--dorado)}
+.ia-titulo{font-family:'Playfair Display',serif;font-size:20px;color:var(--negro);margin-bottom:.85rem}
+.ia-texto{font-size:16px;line-height:1.85;color:var(--texto-s)}
+.ia-texto p{margin-bottom:1rem}
+.ia-texto p:last-child{margin-bottom:0}
+
+/* PLAN 90 DÍAS */
+.plan-semanas{display:flex;flex-direction:column;gap:.75rem;margin-top:1rem}
+.semana{background:var(--crema-o);border:1px solid var(--borde);border-radius:6px;padding:1.1rem 1.25rem;border-left:3px solid var(--dorado)}
+.sem-num{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dorado-o);margin-bottom:4px}
+.sem-titulo{font-family:'Playfair Display',serif;font-size:16px;color:var(--negro);margin-bottom:4px}
+.sem-desc{font-size:14px;line-height:1.6;color:var(--texto-s)}
+
+/* ALERTA */
+.alerta-box{background:var(--negro);border:2px solid var(--rojo);border-radius:6px;padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+.alerta-tit{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#E24B4A;margin-bottom:6px}
+.alerta-txt{font-size:14px;line-height:1.7;color:rgba(247,243,236,.7)}
+
+/* PREGUNTA CIERRE */
+.pregunta-cierre{background:var(--negro);border:1.5px solid var(--dorado);border-radius:6px;padding:2rem;text-align:center;margin-bottom:1.25rem}
+.pc-txt{font-family:'Playfair Display',serif;font-size:19px;font-style:italic;color:white;line-height:1.55;margin-bottom:.75rem}
+.pc-ref{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--dorado-o)}
+
+/* ACCIONES */
+.acciones-wrap{background:white;border:1px solid var(--borde);border-radius:8px;padding:1.75rem;margin-bottom:1.25rem}
+.acc-titulo{font-family:'Playfair Display',serif;font-size:18px;color:var(--negro);margin-bottom:.5rem}
+.acc-desc{font-size:15px;color:var(--texto-s);margin-bottom:1.25rem}
+.correo-flex{display:flex;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap}
+.correo-flex input{flex:1;min-width:200px;padding:.75rem 1rem;border:1px solid var(--borde);border-radius:4px;font-size:15px;font-family:'Crimson Pro',serif;color:var(--texto)}
+.correo-flex input:focus{outline:none;border-color:var(--dorado)}
+.btn-env{padding:.75rem 1.5rem;background:var(--negro);color:var(--dorado);border:1.5px solid var(--negro);border-radius:4px;font-family:'Crimson Pro',serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-env:hover{background:var(--dorado);color:var(--negro);border-color:var(--dorado)}
+.btn-env:disabled{background:#ccc;border-color:#ccc;color:white;cursor:not-allowed}
+.btn-pdf{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.75rem;background:var(--crema-o);border:1px solid var(--borde);border-radius:4px;font-family:'Crimson Pro',serif;font-size:15px;cursor:pointer;color:var(--texto-s);transition:background .2s}
+.btn-pdf:hover{background:var(--crema-d)}
+.msg{font-size:14px;margin-top:.5rem}
+.msg.ok{color:var(--verde)}.msg.err{color:var(--rojo)}
+
+.pie{text-align:center;font-size:13px;color:var(--texto-m);margin-top:2rem;padding-bottom:1rem}
+
+@media(max-width:600px){
+  .resumen-grid{grid-template-columns:1fr}
+  .correo-flex{flex-direction:column}
+}
+@media print{
+  .nav-outer,.acciones-wrap,.pie,.btn-pdf,.btn-ir,.btn-ir-s,.estado-wrap,.cargando{display:none!important}
+  .reporte-generado{display:block!important}
+  body{background:white}
+  .reporte-header{background:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{margin:1.5cm}
+}
+</style>
+</head>
+<body>
+
+<div class="nav-outer">
+  <nav>
+    <a href="index.html" class="nav-logo">estres.ciemx.com</a>
+    <button class="nav-back" onclick="history.back()">← Volver</button>
+  </nav>
+</div>
+
+<div class="contenedor">
+
+  <!-- ESTADO: falta completar tests -->
+  <div class="estado-wrap" id="estado-incompleto" style="display:none">
+    <div class="estado-icon">📋</div>
+    <h2 class="estado-titulo">Completa los 4 tests primero</h2>
+    <p class="estado-desc">Para generar tu reporte necesitas terminar los cuatro tests <strong>en este mismo navegador</strong>. Cada uno tarda entre 10 y 18 minutos.</p>
+    <div style="background:#FDF3E3;border:1px solid #D4A050;border-radius:4px;padding:.85rem 1rem;margin-bottom:1rem;font-size:14px;line-height:1.6;color:#633806;max-width:420px;text-align:left">
+      ⚠ Los resultados se guardan en este navegador. Si hiciste los tests en otro navegador o dispositivo, tendrás que repetirlos aquí.
+    </div>
+    <div class="tests-check" id="tests-check"></div>
+    <div style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center">
+      <a href="index.html#tests" class="btn-ir">Ir a los tests</a>
+      <button class="btn-ir-s" onclick="limpiarYReiniciar()">Reiniciar todo</button>
+    </div>
+  </div>
+
+  <!-- ESTADO: listo para generar -->
+  <div class="estado-wrap" id="estado-listo" style="display:none">
+    <div class="estado-icon">✦</div>
+    <h2 class="estado-titulo">Tus 4 tests están completos</h2>
+    <p class="estado-desc">La inteligencia artificial va a cruzar todos tus resultados y generar tu diagnóstico personalizado. Tarda aproximadamente 30 segundos.</p>
+    <div class="tests-check" id="tests-check-listo"></div>
+    <div style="margin-top:1.5rem">
+      <button class="btn-ir" onclick="generarReporte()">Generar mi reporte</button>
+      <a href="index.html#tests" class="btn-ir-s">Revisar los tests</a>
+    </div>
+    <p style="font-size:13px;color:var(--texto-m);margin-top:1rem;cursor:pointer;text-decoration:underline" onclick="limpiarYReiniciar()">¿Los hiciste en otro navegador? Haz clic aquí para reiniciar</p>
+  </div>
+
+  <!-- CARGANDO -->
+  <div class="cargando" id="cargando">
+    <div class="spinner"></div>
+    <div class="cargando-titulo">Generando tu reporte</div>
+    <div class="cargando-desc">La IA está analizando tus cuatro diagnósticos</div>
+    <ul class="cargando-pasos" id="pasos-cargando">
+      <li class="activo">Leyendo resultados de los 4 tests</li>
+      <li>Cruzando ciclo, mecha, zona y factura</li>
+      <li>Identificando tu perfil integrado</li>
+      <li>Construyendo el plan de 90 días</li>
+      <li>Redactando recomendaciones personalizadas</li>
+    </ul>
+  </div>
+
+  <!-- REPORTE GENERADO -->
+  <div class="reporte-generado" id="reporte-generado">
+
+    <div class="reporte-header">
+      <div class="rh-serie">Reporte integrado · El último en enterarse</div>
+      <div class="rh-nombre" id="rh-nombre"></div>
+      <div class="rh-titulo" id="rh-titulo"></div>
+      <div class="rh-fecha" id="rh-fecha"></div>
+    </div>
+
+    <div class="resumen-grid" id="resumen-grid"></div>
+
+    <div class="alerta-box" id="alerta-trinchera" style="display:none">
+      <div class="alerta-tit">⚠ Zona Trinchera activa</div>
+      <div class="alerta-txt">Tu diagnóstico muestra la zona Trinchera como zona dominante o secundaria. Esta es la señal más importante del sistema: el estrés ha dejado de percibirse como problema y se ha convertido en el contexto desde el que operas. Lee el Capítulo 7 antes de continuar.</div>
+    </div>
+
+    <div class="ia-bloque">
+      <div class="ia-kicker">Diagnóstico integrado</div>
+      <div class="ia-titulo">Tu perfil directivo completo</div>
+      <div class="ia-texto" id="diagnostico-texto">Generando...</div>
+    </div>
+
+    <div class="ia-bloque">
+      <div class="ia-kicker">La dinámica de tu combinación</div>
+      <div class="ia-titulo">Cómo se relacionan tus cuatro resultados</div>
+      <div class="ia-texto" id="dinamica-texto">Generando...</div>
+    </div>
+
+    <div class="ia-bloque">
+      <div class="ia-kicker">Tu plan de acción</div>
+      <div class="ia-titulo">90 días · Semana a semana</div>
+      <div class="plan-semanas" id="plan-semanas"></div>
+    </div>
+
+    <div class="ia-bloque">
+      <div class="ia-kicker">Tu mapa de riesgo</div>
+      <div class="ia-titulo">Qué puede ocurrir si no actúas</div>
+      <div class="ia-texto" id="riesgo-texto">Generando...</div>
+    </div>
+
+    <div class="ia-bloque">
+      <div class="ia-kicker">Lecturas recomendadas</div>
+      <div class="ia-titulo">Para tu perfil específico</div>
+      <div class="ia-texto" id="lecturas-texto">Generando...</div>
+    </div>
+
+    <div class="pregunta-cierre">
+      <div class="pc-txt" id="pregunta-cierre-txt">"¿Qué cuota estás pagando ahora mismo — y desde cuándo?"</div>
+      <div class="pc-ref">El último en enterarse · Enrique Berrueta Alvarez</div>
+    </div>
+
+    <div class="acciones-wrap">
+      <div class="acc-titulo">Guarda tu reporte</div>
+      <div class="acc-desc">Recíbelo completo por correo o guárdalo como PDF.</div>
+      <div class="correo-flex">
+        <input type="email" id="correo-input" placeholder="tu@correo.com">
+        <button class="btn-env" id="btn-env" onclick="enviarCorreo()">Enviar por correo →</button>
+      </div>
+      <p class="msg" id="msg-correo"></p>
+      <button class="btn-pdf" onclick="window.print()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+        Guardar como PDF
+      </button>
+    </div>
+
+  </div>
+
+  <div class="pie">Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com<br>El último en enterarse · Sistema de autodiagnóstico para directivos</div>
+
+</div>
+
+<script>
+emailjs.init('AS4JMWcosY0dk8FBl');
+
+// ── LEER RESULTADOS ──
+let t1=null,t2=null,t3=null,t4=null;
+try{t1=JSON.parse(localStorage.getItem('test1_resultado'))}catch(e){}
+try{t2=JSON.parse(localStorage.getItem('test2_resultado'))}catch(e){}
+try{t3=JSON.parse(localStorage.getItem('test3_resultado'))}catch(e){}
+try{t4=JSON.parse(localStorage.getItem('test4_resultado'))}catch(e){}
+
+// Fallback: si no hay resultado pero sí visitado, marcar como pendiente con mensaje
+const nombre=localStorage.getItem('reporte_nombre')||'';
+const completos=[t1,t2,t3,t4].map((t,i)=>({n:i+1,ok:!!t}));
+const todosCompletos=completos.every(c=>c.ok);
+
+// Debug en consola
+console.log('Tests en localStorage:', {
+  t1: !!t1, t2: !!t2, t3: !!t3, t4: !!t4,
+  v1: localStorage.getItem('test1_visitado'),
+  v2: localStorage.getItem('test2_visitado'),
+  v3: localStorage.getItem('test3_visitado'),
+  v4: localStorage.getItem('test4_visitado')
+});
+
+function limpiarYReiniciar(){
+  if(confirm('¿Seguro? Esto borrará los resultados guardados y tendrás que hacer los tests de nuevo.')){
+    ['test1_resultado','test2_resultado','test3_resultado','test4_resultado',
+     'test1_visitado','test2_visitado','test3_visitado','test4_visitado'].forEach(k=>localStorage.removeItem(k));
+    window.location.href='index.html#tests';
+  }
+}
+
+// ── MOSTRAR ESTADO ──
+function buildCheckRow(n,ok,label){
+  return `<div class="tc-row ${ok?'ok':'pend'}">
+    <span class="tc-ico">${ok?'✓':'○'}</span>
+    <span>Test ${n} — ${label}</span>
+    ${!ok?`<a href="test${n}.html" style="margin-left:auto;font-size:13px;color:var(--dorado-o);text-decoration:none">Hacer →</a>`:''}
+  </div>`;
+}
+const labels=['¿En qué punto del ciclo?','¿Cuál es tu mecha?','¿En qué zona operas?','La Factura'];
+
+if(!todosCompletos){
+  document.getElementById('estado-incompleto').style.display='block';
+  document.getElementById('tests-check').innerHTML=completos.map((c,i)=>buildCheckRow(c.n,c.ok,labels[i])).join('');
+} else {
+  document.getElementById('estado-listo').style.display='block';
+  document.getElementById('tests-check-listo').innerHTML=completos.map((c,i)=>buildCheckRow(c.n,c.ok,labels[i])).join('');
+}
+
+// ── GENERAR REPORTE ──
+async function generarReporte(){
+  document.getElementById('estado-listo').style.display='none';
+  document.getElementById('cargando').style.display='block';
+
+  const pasos=document.querySelectorAll('#pasos-cargando li');
+  let pasoActual=0;
+  const animPasos=setInterval(()=>{
+    pasos.forEach(p=>p.classList.remove('activo'));
+    if(pasoActual<pasos.length){pasos[pasoActual].classList.add('activo');pasoActual++;}
+  },1800);
+
+  const prompt=construirPrompt();
+
+  try{
+    // Llamada via proxy CORS
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':'',
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:3000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+
+    clearInterval(animPasos);
+
+    if(!resp.ok){
+      const errData=await resp.json().catch(()=>({}));
+      console.error('API error:', resp.status, errData);
+      throw new Error('API status '+resp.status);
+    }
+
+    const data=await resp.json();
+    const texto=data.content[0].text;
+    let r;
+    try{
+      const match=texto.match(/\{[\s\S]*\}/);
+      r=JSON.parse(match?match[0]:texto);
+    }catch(e){
+      console.error('JSON parse error:', e, texto.substring(0,200));
+      throw new Error('JSON inválido');
+    }
+    mostrarReporte(r);
+
+  }catch(err){
+    clearInterval(animPasos);
+    console.error('Error completo:', err);
+    // Fallback: generar reporte local con los datos
+    const rLocal=generarReporteLocal();
+    mostrarReporte(rLocal);
+  }
+}
+
+function construirPrompt(){
+  return `Eres el asistente de diagnóstico del libro "El último en enterarse" de Enrique Berrueta Alvarez, pedagogo y orientador familiar con 30 años de experiencia directiva.
+
+El directivo acaba de completar los cuatro tests del sistema de autodiagnóstico. Aquí están sus resultados:
+
+TEST 1 — EL CICLO DEL ESTRÉS:
+- Perfil: ${t1.titulo}
+- Puntuación: ${t1.puntuacion}/150 (${t1.porcentaje}%)
+- Sección más baja: ${t1.seccionMasBaja}
+
+TEST 2 — LA MECHA:
+- Tipología: ${t2.tipologia}
+- Combinación: ${t2.combinacion}
+- Mechas: Control ${t2.mechaControl}% | Reconocimiento ${t2.mechaReconocimiento}% | Lealtad ${t2.mechaLealtad}% | Límites ${t2.mechaLimites}%
+
+TEST 3 — LAS ZONAS:
+- Zona dominante: ${t3.zonaDOM}
+- Zona secundaria: ${t3.zonaSEG}
+- Trinchera activa: ${t3.alertaTrinchera?'SÍ':'NO'}
+
+TEST 4 — LA FACTURA:
+- Nivel general: ${t4.titulo} (${t4.porcentaje}%)
+- Cuota más crítica: ${t4.cuotaMasCritica}
+- Directivo funcional detectado: ${t4.esFuncional?'SÍ':'NO'}
+- Cuerpo: ${t4.cuerpo}/50 (${t4.cuerpoNivel}) | Relaciones: ${t4.relaciones}/50 (${t4.relacionesNivel}) | Rendimiento: ${t4.rendimiento}/50 (${t4.rendimientoNivel}) | Identidad: ${t4.identidad}/50 (${t4.identidadNivel})
+
+Genera un reporte integrado personalizado. Responde ÚNICAMENTE con JSON válido, sin texto adicional, sin markdown, sin backticks:
+
+{"perfil_nombre":"nombre evocador 3-5 palabras","perfil_titulo":"título 8-12 palabras que capture la esencia","diagnostico":"3 párrafos separados por salto de línea. Usa lenguaje del libro: ciclo mecha zona factura línea. Tono mentor-amigo segunda persona.","dinamica":"2 párrafos explicando cómo se alimentan sus cuatro resultados entre sí.","plan_semanas":[{"semana":"Semanas 1-2","titulo":"título concreto","descripcion":"acción específica"},{"semana":"Semanas 3-4","titulo":"título","descripcion":"acción"},{"semana":"Semanas 5-6","titulo":"título","descripcion":"acción"},{"semana":"Semanas 7-8","titulo":"título","descripcion":"acción"},{"semana":"Semanas 9-10","titulo":"título","descripcion":"acción"},{"semana":"Semanas 11-12","titulo":"título","descripcion":"acción con conversación pendiente Cap.10"}],"riesgo":"2 párrafos honestos sobre qué puede ocurrir sin acción en 90 días. Menciona Cap.7.","lecturas":"3 libros de la bibliografía con razón específica para este perfil.","pregunta_cierre":"pregunta final personalizada solo para este directivo específico."}`;
+}
+
+function generarReporteLocal(){
+  // Reporte de respaldo cuando la API no está disponible
+  // Genera contenido rico basado en los datos reales del directivo
+  const ciclo=t1.titulo;
+  const mecha=t2.tipologia;
+  const combo=t2.combinacion;
+  const zonaD=t3.zonaDOM;
+  const zonaS=t3.zonaSEG;
+  const factura=t4.titulo;
+  const cuotaC=t4.cuotaMasCritica;
+  const funcional=t4.esFuncional;
+
+  const diagnosticos={
+    'Eustrés — zona productiva':'Estás en el mejor momento para hacer este trabajo: dentro de la curva, con recursos disponibles. Eso no significa que el riesgo sea cero — significa que tienes una ventana de tiempo que pocos directivos aprovechan conscientemente.',
+    'Señales de distrés — el agua se calienta':'El ciclo ya empezó a bajar. No es una crisis — es el momento más eficiente para intervenir. El Capítulo 6 del libro lo dice con precisión: el punto de intervención más valioso está exactamente aquí, antes de que la factura se consolide.',
+    'Factura acumulándose — el directivo funcional':'Sigues cumpliendo. Sigues llegando. Pero el depósito lleva tiempo en rojo sin que nadie lo vea — empezando por ti. Este es el perfil más peligroso del ciclo: la capacidad de seguir funcionando impide recibir la señal de alarma.',
+    'Cerca de la línea de no retorno':'El estrés ha dejado de ser un problema que tienes y se está convirtiendo en el sistema desde el que operas. Reconocer esto no es una condena — es la señal más importante. Todavía estás a este lado de la línea.'
+  };
+
+  const desc_diag=diagnosticos[ciclo]||diagnosticos['Señales de distrés — el agua se calienta'];
+
+  return {
+    perfil_nombre: mecha+' en '+zonaD,
+    perfil_titulo: 'Directivo '+mecha+' operando en '+zonaD+' con factura activa en '+cuotaC,
+    diagnostico: desc_diag+'
+
+Tu mecha es '+combo+'. Eso significa que cuando el estrés aprieta, tu detonador específico tiene que ver con '+t2.combinacion.toLowerCase()+'. El Capítulo 8 describe este patrón con precisión: no es tu carácter, es tu historia acumulada.
+
+La zona donde estás operando — '+zonaD+(t3.zonaSEG?' y '+t3.zonaSEG:'')+' — define cómo vives el problema en el día a día. Tu factura más alta está en '+cuotaC+'. Esa es la prioridad real, no las cuatro dimensiones a la vez.',
+    dinamica: 'La combinación de '+ciclo.split('—')[0].trim()+' con mecha de '+mecha+' y zona '+zonaD+' crea un patrón específico: el estrés se acumula desde el detonador, se instala en la zona y cobra en la dimensión de '+cuotaC+'. Cada parte alimenta a la siguiente.
+
+'+(funcional?'El perfil de directivo funcional que tienes hace este patrón especialmente invisible. Sigues produciendo resultados mientras el costo sube en silencio. El Capítulo 6 describe exactamente esto: la capacidad de seguir funcionando es también lo que impide ver la señal de alarma a tiempo.':'La buena noticia es que este patrón es reconocible y modificable. El primer paso — que ya diste al terminar estos tests — es nombrarlo con precisión.'),
+    plan_semanas:[
+      {semana:'Semanas 1-2',titulo:'Observar el patrón sin cambiar nada',descripcion:'Aplica el termómetro de tres preguntas del Capítulo 3 al final de cada jornada. Anota tu nivel de energía, calidad de decisiones y presencia relacional. No cambies nada todavía — acumula datos reales sobre tu patrón específico.'},
+      {semana:'Semanas 3-4',titulo:'Instalar El Ancla',descripcion:'Antes de responder en cualquier situación que active tu mecha de '+mecha.toLowerCase()+', aplica El Ancla: tres respiraciones + una pregunta interna. No para no sentir — para elegir cómo responder. Capítulo 9.'},
+      {semana:'Semanas 5-6',titulo:'Atender la cuota de '+cuotaC,descripcion:'Tu cuota más activa es '+cuotaC+'. Esta semana elige una acción concreta para esa dimensión específica. No las cuatro — una. Pequeña si hace falta. Con fecha y con tu nombre.'},
+      {semana:'Semanas 7-8',titulo:'Protocolo de 24 horas',descripcion:'Cualquier decisión importante tomada bajo presión emocional alta se pospone 24 horas si la situación lo permite. No es indecisión — es reconocer que el cerebro bajo estrés no tiene acceso completo a su capacidad analítica. Capítulo 9.'},
+      {semana:'Semanas 9-10',titulo:'Salir de la zona '+zonaD,descripcion:'Identifica la decisión más antigua que la zona '+zonaD+' lleva postergando. Esta semana actúa sobre ella aunque sea de forma parcial. La dirección importa más que la perfección. Capítulo 5.'},
+      {semana:'Semanas 11-12',titulo:'La conversación que falta',descripcion:'Hay una conversación pendiente que identificaste en estas semanas. Tenla. Con preparación, sin garantía de perfección. El Capítulo 10 tiene el protocolo. Seguir postergándola tiene un costo mayor que cualquier incomodidad de la conversación.'}
+    ],
+    riesgo: 'Si no actúas en los próximos 90 días, el patrón actual seguirá consolidándose. La zona '+zonaD+' produce su propio costo energético silencioso. La mecha de '+mecha+' seguirá activándose ante los mismos detonadores. Y la cuota de '+cuotaC+' seguirá subiendo sin señal de alarma visible. El Capítulo 7 lo describe con precisión.
+
+'+(funcional?'El riesgo específico del directivo funcional es que el colapso nunca llega de forma dramática — llega como apagamiento gradual. Un día te das cuenta de que llevas años funcionando por inercia. El momento para cambiarlo es siempre antes de ese día.':'El punto de intervención más eficiente es ahora. No porque estés en crisis — sino porque tienes recursos disponibles que en seis meses pueden no estar.'),
+    lecturas: 'Sapolsky, R. — Why Zebras Don't Get Ulcers: Para entender por qué tu cuerpo lleva la cuenta aunque tú no la lleves. Especialmente relevante para tu cuota de '+cuotaC+'.
+
+Goleman, D. — Inteligencia emocional: El capítulo sobre el secuestro amigdalino explica con precisión la mecánica de tu mecha de '+mecha.toLowerCase()+'. Leerlo cambia cómo te ves cuando reaccionas.
+
+Clear, J. — Hábitos atómicos: El manual técnico del Capítulo 10. Para implementar el plan de 90 días sin el error de intentar cambiar todo a la vez.',
+    pregunta_cierre: '¿En qué momento exacto del día de hoy actuaste como directivo cuando debías actuar como persona — y qué habría cambiado si hubieras hecho lo contrario?'
+  };
+}
+
+
+function mostrarReporte(r){
+  document.getElementById('cargando').style.display='none';
+  document.getElementById('reporte-generado').style.display='block';
+
+  // Guardar para correo
+  window._reporteData=r;
+
+  // Header
+  document.getElementById('rh-nombre').textContent=nombre||'Tu reporte directivo';
+  document.getElementById('rh-titulo').innerHTML=r.perfil_titulo;
+  document.getElementById('rh-fecha').textContent='Generado el '+new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'});
+
+  // Resumen 4 tests
+  const cols=['#1A5EA8','#BA7517','#0F6E56','#A32D2D'];
+  const resultados=[
+    {num:'Test 1',res:t1.titulo,sub:'Puntuación '+t1.puntuacion+'/150 · '+t1.porcentaje+'%'},
+    {num:'Test 2',res:t2.tipologia,sub:t2.combinacion},
+    {num:'Test 3',res:t3.zonaDOM+' + '+t3.zonaSEG,sub:t3.alertaTrinchera?'⚠ Trinchera activa':'Combinación identificada'},
+    {num:'Test 4',res:t4.titulo,sub:'Cuota crítica: '+t4.cuotaMasCritica}
+  ];
+  document.getElementById('resumen-grid').innerHTML=resultados.map((r,i)=>
+    `<div class="res-card" style="border-top-color:${cols[i]}">
+      <div class="rc-num" style="color:${cols[i]}">${r.num}</div>
+      <div class="rc-resultado">${r.res}</div>
+      <div class="rc-sub">${r.sub}</div>
+    </div>`).join('');
+
+  // Alerta trinchera
+  if(t3.alertaTrinchera) document.getElementById('alerta-trinchera').style.display='block';
+
+  // Bloques IA
+  document.getElementById('diagnostico-texto').innerHTML=r.diagnostico.split('\n').map(p=>p?`<p>${p}</p>`:'').join('');
+  document.getElementById('dinamica-texto').innerHTML=r.dinamica.split('\n').map(p=>p?`<p>${p}</p>`:'').join('');
+  document.getElementById('riesgo-texto').innerHTML=r.riesgo.split('\n').map(p=>p?`<p>${p}</p>`:'').join('');
+  document.getElementById('lecturas-texto').innerHTML=r.lecturas.split('\n').map(p=>p?`<p>${p}</p>`:'').join('');
+
+  // Plan semanas
+  document.getElementById('plan-semanas').innerHTML=r.plan_semanas.map(s=>
+    `<div class="semana">
+      <div class="sem-num">${s.semana}</div>
+      <div class="sem-titulo">${s.titulo}</div>
+      <div class="sem-desc">${s.descripcion}</div>
+    </div>`).join('');
+
+  // Pregunta cierre
+  document.getElementById('pregunta-cierre-txt').textContent='"'+r.pregunta_cierre+'"';
+
+  window.scrollTo(0,0);
+}
+
+// ── ENVIAR CORREO ──
+async function enviarCorreo(){
+  const correo=document.getElementById('correo-input').value.trim();
+  const msg=document.getElementById('msg-correo');
+  const btn=document.getElementById('btn-env');
+  if(!correo||!correo.includes('@')){msg.textContent='Escribe un correo válido.';msg.className='msg err';return;}
+  btn.disabled=true;btn.textContent='Enviando...';msg.textContent='';
+  const r=window._reporteData;
+  if(!r) return;
+
+  const plan=r.plan_semanas.map(s=>`${s.semana}: ${s.titulo}\n${s.descripcion}`).join('\n\n');
+  const texto=
+    'REPORTE INTEGRADO — EL ÚLTIMO EN ENTERARSE\n'+
+    '═'.repeat(50)+'\n\n'+
+    r.perfil_titulo+'\n\n'+
+    'TEST 1: '+t1.titulo+' ('+t1.puntuacion+'/150)\n'+
+    'TEST 2: '+t2.tipologia+' — '+t2.combinacion+'\n'+
+    'TEST 3: '+t3.zonaDOM+' + '+t3.zonaSEG+(t3.alertaTrinchera?' ⚠ TRINCHERA ACTIVA':'')+'\n'+
+    'TEST 4: '+t4.titulo+' — Cuota crítica: '+t4.cuotaMasCritica+'\n\n'+
+    '─'.repeat(40)+'\nDIAGNÓSTICO INTEGRADO\n'+'─'.repeat(40)+'\n'+
+    r.diagnostico+'\n\n'+
+    '─'.repeat(40)+'\nDINÁMICA DE TU COMBINACIÓN\n'+'─'.repeat(40)+'\n'+
+    r.dinamica+'\n\n'+
+    '─'.repeat(40)+'\nPLAN DE 90 DÍAS\n'+'─'.repeat(40)+'\n'+
+    plan+'\n\n'+
+    '─'.repeat(40)+'\nMAPA DE RIESGO\n'+'─'.repeat(40)+'\n'+
+    r.riesgo+'\n\n'+
+    '─'.repeat(40)+'\nLECTURAS RECOMENDADAS\n'+'─'.repeat(40)+'\n'+
+    r.lecturas+'\n\n'+
+    '─'.repeat(40)+'\n'+r.pregunta_cierre+'\n\n'+
+    'Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com';
+
+  try{
+    await emailjs.send('service_j8od1sk','template_2h2t21c',{
+      nombre:nombre||'Directivo',cargo:'',organizacion:'',
+      puntuacion:t1.puntuacion+'/150',
+      perfil:r.perfil_titulo,
+      resultado:texto,
+      to_email:correo
+    });
+    msg.textContent='✓ Tu reporte fue enviado a '+correo;
+    msg.className='msg ok';
+    btn.textContent='Enviado ✓';
+  } catch(e){
+    msg.textContent='Error al enviar. Intenta de nuevo.';
+    msg.className='msg err';
+    btn.disabled=false;btn.textContent='Enviar por correo →';
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test 3 — ¿En qué zona estás operando? | El último en enterarse</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --negro:#1A1A1A;
+  --negro-suave:#2C2C2C;
+  --dorado:#C9A84C;
+  --dorado-claro:#F5EDD6;
+  --dorado-oscuro:#8B6914;
+  --gris-oscuro:#3D3D3D;
+  --gris-medio:#666666;
+  --gris-claro:#F2F0EB;
+  --borde:#3A3A3A;
+  --borde-claro:#E8E4DC;
+  --texto:#1A1A1A;
+  --blanco:#FFFFFF;
+  --niebla:#1A5EA8;--niebla-c:#EAF2FB;
+  --fuego:#BA7517;--fuego-c:#FDF3E3;
+  --pantano:#0F6E56;--pantano-c:#E8F5F0;
+  --espejo:#534AB7;--espejo-c:#EEEDFE;
+  --trinchera:#A32D2D;--trinchera-c:#FCF0F0;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F2F0EB;color:var(--texto);min-height:100vh}
+
+.encabezado{background:var(--negro);color:var(--dorado);padding:2.25rem 1.5rem 1.75rem;text-align:center;border-bottom:3px solid var(--dorado)}
+.encabezado .serie{font-size:11px;letter-spacing:.15em;opacity:.75;margin-bottom:8px;text-transform:uppercase;color:var(--dorado)}
+.encabezado h1{font-size:26px;font-weight:700;margin-bottom:8px;line-height:1.3;color:var(--blanco)}
+.encabezado .subtitulo{font-size:14px;color:var(--dorado);opacity:.9}
+
+.contenedor{max-width:740px;margin:0 auto;padding:1.75rem 1rem 3rem}
+
+.caja-intro{background:var(--blanco);border:1px solid var(--borde-claro);border-left:4px solid var(--dorado);border-radius:0 10px 10px 0;padding:1.25rem 1.5rem;margin-bottom:1.75rem}
+.caja-intro p{font-size:15px;line-height:1.75;color:#333}
+.caja-intro strong{color:var(--dorado-oscuro)}
+
+.datos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.75rem}
+.datos-grid .full{grid-column:1/-1}
+.campo label{display:block;font-size:12px;font-weight:700;color:var(--gris-medio);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.campo input{width:100%;padding:10px 14px;border:1px solid var(--borde-claro);border-radius:8px;font-size:15px;color:var(--texto);background:var(--blanco);transition:border .2s}
+.campo input:focus{outline:none;border-color:var(--dorado)}
+
+.barra-wrap{display:flex;align-items:center;gap:12px;margin:1.5rem 0;background:var(--blanco);border:1px solid var(--borde-claro);border-radius:10px;padding:.85rem 1.25rem;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.barra-bg{flex:1;height:6px;background:#E8E4DC;border-radius:3px}
+.barra-fill{height:6px;background:var(--dorado);border-radius:3px;transition:width .3s;width:0%}
+.barra-txt{font-size:13px;color:#999;min-width:55px;text-align:right}
+
+.item{background:var(--blanco);border:1px solid var(--borde-claro);border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:10px;transition:border-color .2s}
+.item.ok{border-color:var(--dorado);border-left:3px solid var(--dorado)}
+.item-txt{font-size:15px;line-height:1.6;color:#222;margin-bottom:.9rem}
+.esc-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.esc-lbl{font-size:12px;color:#999;min-width:72px}
+.esc-lbl.r{text-align:right}
+.esc-btns{display:flex;gap:6px;flex:1;justify-content:center}
+.esc-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--borde-claro);background:var(--blanco);font-size:14px;font-weight:600;color:#888;cursor:pointer;transition:all .15s}
+.esc-btn:hover{background:var(--dorado-claro);border-color:var(--dorado);color:var(--dorado-oscuro)}
+.esc-btn.sel{background:var(--negro);border-color:var(--dorado);color:var(--dorado)}
+
+.btn-calcular{display:none;width:100%;padding:14px;background:var(--negro);color:var(--dorado);border:2px solid var(--dorado);border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:1.5rem;letter-spacing:.05em;transition:all .2s}
+.btn-calcular:hover{background:var(--dorado);color:var(--negro)}
+
+.resultado-wrap{display:none;margin-top:1.5rem}
+
+.res-header{background:var(--negro);border-radius:12px;padding:2rem;margin-bottom:1.25rem;border:2px solid var(--dorado)}
+.res-tipologia{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dorado);margin-bottom:8px}
+.res-nombre{font-size:36px;font-weight:700;color:var(--blanco);margin-bottom:4px}
+.res-combo{font-size:14px;font-weight:600;color:var(--dorado);margin-bottom:16px}
+.res-desc{font-size:15px;line-height:1.8;color:#CCCCCC}
+
+.metricas{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1.25rem}
+.metrica{background:var(--blanco);border:1px solid var(--borde-claro);border-radius:8px;padding:.75rem .5rem;text-align:center}
+.metrica-lbl{font-size:11px;color:#888;margin-bottom:4px}
+.metrica-val{font-size:16px;font-weight:700;color:var(--texto)}
+.metrica.dom{border-color:var(--dorado);border-width:2px}
+.metrica.dom .metrica-val{color:var(--dorado-oscuro)}
+
+.grafica-wrap{background:var(--blanco);border:1px solid var(--borde-claro);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.grafica-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:1rem}
+
+.alerta-trinchera{display:none;background:#1A1A1A;border:2px solid #A32D2D;border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+.alerta-trinchera .alerta-tit{font-size:13px;font-weight:700;color:#E24B4A;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.alerta-trinchera .alerta-txt{font-size:14px;color:#CCCCCC;line-height:1.7}
+
+.recs-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:.75rem}
+.rec{background:var(--blanco);border:1px solid var(--borde-claro);border-left:4px solid var(--dorado);border-radius:0 10px 10px 0;padding:1.1rem 1.25rem;margin-bottom:10px}
+.rec-cap{font-size:13px;font-weight:700;color:var(--dorado-oscuro);margin-bottom:6px}
+.rec-txt{font-size:14px;line-height:1.75;color:#333}
+
+.caja-acc{background:var(--blanco);border:1px solid var(--borde-claro);border-radius:12px;padding:1.25rem 1.5rem;margin-top:1.25rem}
+.caja-acc h3{font-size:15px;font-weight:700;color:#333;margin-bottom:4px}
+.caja-acc p{font-size:14px;color:#666;margin-bottom:.75rem}
+.correo-flex{display:flex;gap:8px;margin-bottom:8px}
+.correo-flex input{flex:1;padding:10px 14px;border:1px solid var(--borde-claro);border-radius:8px;font-size:15px}
+.correo-flex input:focus{outline:none;border-color:var(--dorado)}
+.btn-env{padding:10px 18px;background:var(--negro);color:var(--dorado);border:1px solid var(--dorado);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s}
+.btn-env:hover{background:var(--dorado);color:var(--negro)}
+.btn-env:disabled{background:#aaa;border-color:#aaa;color:white;cursor:not-allowed}
+.btn-pdf{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:var(--gris-claro);color:#444;border:1px solid var(--borde-claro);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}
+.btn-pdf:hover{background:#E8E4DC}
+.msg{font-size:14px;margin-top:6px}
+.msg.ok{color:var(--pantano)}
+.msg.err{color:var(--trinchera)}
+
+.sig-test{background:var(--negro);border:1px solid var(--dorado);border-radius:10px;padding:1.1rem 1.5rem;margin-top:1.25rem}
+.sig-test p{font-size:14px;color:var(--dorado);font-weight:700;margin-bottom:2px}
+.sig-test span{font-size:13px;color:#AAA}
+
+.pie{text-align:center;font-size:13px;color:#aaa;margin-top:3rem;padding-bottom:1rem}
+
+@media(max-width:500px){
+  .datos-grid{grid-template-columns:1fr}.datos-grid .full{grid-column:1}
+  .metricas{grid-template-columns:repeat(3,1fr)}
+  .esc-lbl{display:none}
+}
+@media print{
+  body{background:white!important}
+  .encabezado{background:var(--negro)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .barra-wrap,.btn-calcular,.caja-acc,.sig-test,.pie{display:none!important}
+  .item{break-inside:avoid}
+  .resultado-wrap{display:block!important}
+  .rec,.grafica-wrap,.res-header,.metricas,.alerta-trinchera{break-inside:avoid}
+  .contenedor{padding:.5rem}
+  @page{margin:1.5cm}
+}
+</style>
+</head>
+<body>
+
+<div class="encabezado">
+  <div class="serie">El último en enterarse · Sistema de autodiagnóstico para directivos</div>
+  <h1>Test 3 — ¿En qué zona estás operando?</h1>
+  <div class="subtitulo">25 preguntas · 12 minutos · identifica dónde vive el problema</div>
+</div>
+
+<div class="contenedor">
+
+  <div class="caja-intro">
+    <p>Este test identifica en qué zona del Capítulo 5 tienes instalada tu oficina sin saberlo. No hay zonas buenas ni malas — hay zonas que se ven y zonas que no. La más peligrosa no es la de Fuego, es la de Trinchera: donde el problema ya no se percibe como problema.<br><br>
+    Responde pensando en <strong>las últimas cuatro semanas</strong>.<br>
+    <strong>1 = casi nunca &nbsp;·&nbsp; 3 = a veces &nbsp;·&nbsp; 5 = casi siempre</strong></p>
+  </div>
+
+  <div class="datos-grid">
+    <div class="campo full"><label for="nombre">Nombre completo</label><input type="text" id="nombre" placeholder="Tu nombre"></div>
+    <div class="campo"><label for="cargo">Cargo</label><input type="text" id="cargo" placeholder="Director, Rector, Gerente..."></div>
+    <div class="campo"><label for="org">Organización</label><input type="text" id="org" placeholder="Tu institución"></div>
+  </div>
+
+  <div class="barra-wrap">
+    <div class="barra-bg"><div class="barra-fill" id="barra"></div></div>
+    <span class="barra-txt" id="barra-txt">0 / 25</span>
+  </div>
+
+  <div class="item" data-i="1" data-z="N"><p class="item-txt">Siento que algo no funciona en mi equipo u organización pero no logro identificar exactamente qué.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(1,1)">1</button><button class="esc-btn" onclick="sel(1,2)">2</button><button class="esc-btn" onclick="sel(1,3)">3</button><button class="esc-btn" onclick="sel(1,4)">4</button><button class="esc-btn" onclick="sel(1,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="2" data-z="F"><p class="item-txt">Mi semana está dominada por urgencias que aparecen sin avisar y desplazan lo que había planeado.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(2,1)">1</button><button class="esc-btn" onclick="sel(2,2)">2</button><button class="esc-btn" onclick="sel(2,3)">3</button><button class="esc-btn" onclick="sel(2,4)">4</button><button class="esc-btn" onclick="sel(2,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="3" data-z="P"><p class="item-txt">Hay problemas conocidos en mi organización que todos ven pero que nadie termina de resolver.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(3,1)">1</button><button class="esc-btn" onclick="sel(3,2)">2</button><button class="esc-btn" onclick="sel(3,3)">3</button><button class="esc-btn" onclick="sel(3,4)">4</button><button class="esc-btn" onclick="sel(3,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="4" data-z="E"><p class="item-txt">He notado que cuando algo sale mal, mi primera reacción es buscar el problema afuera antes que adentro.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(4,1)">1</button><button class="esc-btn" onclick="sel(4,2)">2</button><button class="esc-btn" onclick="sel(4,3)">3</button><button class="esc-btn" onclick="sel(4,4)">4</button><button class="esc-btn" onclick="sel(4,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="5" data-z="T"><p class="item-txt">Hay situaciones que antes me parecían inaceptables y que hoy simplemente asumo como parte del trabajo.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(5,1)">1</button><button class="esc-btn" onclick="sel(5,2)">2</button><button class="esc-btn" onclick="sel(5,3)">3</button><button class="esc-btn" onclick="sel(5,4)">4</button><button class="esc-btn" onclick="sel(5,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="6" data-z="N"><p class="item-txt">Genero más reuniones o pido más información cuando algo no cuadra, aunque eso no siempre aclara el problema.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(6,1)">1</button><button class="esc-btn" onclick="sel(6,2)">2</button><button class="esc-btn" onclick="sel(6,3)">3</button><button class="esc-btn" onclick="sel(6,4)">4</button><button class="esc-btn" onclick="sel(6,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="7" data-z="F"><p class="item-txt">Resuelvo bien las crisis y reconozco que una parte de mí se activa y se siente útil cuando hay una.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(7,1)">1</button><button class="esc-btn" onclick="sel(7,2)">2</button><button class="esc-btn" onclick="sel(7,3)">3</button><button class="esc-btn" onclick="sel(7,4)">4</button><button class="esc-btn" onclick="sel(7,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="8" data-z="P"><p class="item-txt">Hay conversaciones pendientes en mi organización que todos saben que hay que tener y que nadie inicia.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(8,1)">1</button><button class="esc-btn" onclick="sel(8,2)">2</button><button class="esc-btn" onclick="sel(8,3)">3</button><button class="esc-btn" onclick="sel(8,4)">4</button><button class="esc-btn" onclick="sel(8,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="9" data-z="E"><p class="item-txt">Las personas cercanas me han dicho, directa o indirectamente, que mi forma de reaccionar es parte del problema.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(9,1)">1</button><button class="esc-btn" onclick="sel(9,2)">2</button><button class="esc-btn" onclick="sel(9,3)">3</button><button class="esc-btn" onclick="sel(9,4)">4</button><button class="esc-btn" onclick="sel(9,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="10" data-z="T"><p class="item-txt">Cuando alguien nuevo llega a mi equipo y se sorprende por algo, mi respuesta interna es "así son las cosas aquí".</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(10,1)">1</button><button class="esc-btn" onclick="sel(10,2)">2</button><button class="esc-btn" onclick="sel(10,3)">3</button><button class="esc-btn" onclick="sel(10,4)">4</button><button class="esc-btn" onclick="sel(10,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="11" data-z="N"><p class="item-txt">Tomo decisiones con la sensación de que me falta información importante que no sé cómo conseguir.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(11,1)">1</button><button class="esc-btn" onclick="sel(11,2)">2</button><button class="esc-btn" onclick="sel(11,3)">3</button><button class="esc-btn" onclick="sel(11,4)">4</button><button class="esc-btn" onclick="sel(11,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="12" data-z="F"><p class="item-txt">Cuando no hay urgencia activa, siento una incomodidad difusa que se resuelve buscando la próxima tarea importante.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(12,1)">1</button><button class="esc-btn" onclick="sel(12,2)">2</button><button class="esc-btn" onclick="sel(12,3)">3</button><button class="esc-btn" onclick="sel(12,4)">4</button><button class="esc-btn" onclick="sel(12,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="13" data-z="P"><p class="item-txt">Hay decisiones que llevo semanas o meses postergando porque ninguna opción me parece suficientemente clara.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(13,1)">1</button><button class="esc-btn" onclick="sel(13,2)">2</button><button class="esc-btn" onclick="sel(13,3)">3</button><button class="esc-btn" onclick="sel(13,4)">4</button><button class="esc-btn" onclick="sel(13,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="14" data-z="E"><p class="item-txt">Mi estilo de liderazgo ha generado en el equipo comportamientos que no me gustan pero que yo mismo provoqué.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(14,1)">1</button><button class="esc-btn" onclick="sel(14,2)">2</button><button class="esc-btn" onclick="sel(14,3)">3</button><button class="esc-btn" onclick="sel(14,4)">4</button><button class="esc-btn" onclick="sel(14,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="15" data-z="T"><p class="item-txt">Hay niveles de tensión, ritmo o exigencia en mi trabajo que antes me costaban y que ahora simplemente son normales.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(15,1)">1</button><button class="esc-btn" onclick="sel(15,2)">2</button><button class="esc-btn" onclick="sel(15,3)">3</button><button class="esc-btn" onclick="sel(15,4)">4</button><button class="esc-btn" onclick="sel(15,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="16" data-z="N"><p class="item-txt">Cuando intento describir el problema principal que enfrento, el diagnóstico cambia dependiendo del día o el estado de ánimo.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(16,1)">1</button><button class="esc-btn" onclick="sel(16,2)">2</button><button class="esc-btn" onclick="sel(16,3)">3</button><button class="esc-btn" onclick="sel(16,4)">4</button><button class="esc-btn" onclick="sel(16,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="17" data-z="F"><p class="item-txt">Soy más eficaz resolviendo problemas que previniéndolos y en el fondo prefiero que sea así.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(17,1)">1</button><button class="esc-btn" onclick="sel(17,2)">2</button><button class="esc-btn" onclick="sel(17,3)">3</button><button class="esc-btn" onclick="sel(17,4)">4</button><button class="esc-btn" onclick="sel(17,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="18" data-z="P"><p class="item-txt">El clima de mi equipo lleva tiempo deteriorado y las acciones que tomamos no logran revertirlo realmente.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(18,1)">1</button><button class="esc-btn" onclick="sel(18,2)">2</button><button class="esc-btn" onclick="sel(18,3)">3</button><button class="esc-btn" onclick="sel(18,4)">4</button><button class="esc-btn" onclick="sel(18,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="19" data-z="E"><p class="item-txt">Hay patrones en cómo me relaciono con el equipo que reconozco como míos y que sé que necesito cambiar.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(19,1)">1</button><button class="esc-btn" onclick="sel(19,2)">2</button><button class="esc-btn" onclick="sel(19,3)">3</button><button class="esc-btn" onclick="sel(19,4)">4</button><button class="esc-btn" onclick="sel(19,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="20" data-z="T"><p class="item-txt">Cuando pienso en cambiar algo estructural de cómo funciona mi trabajo, la primera respuesta que aparece es que no es posible.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(20,1)">1</button><button class="esc-btn" onclick="sel(20,2)">2</button><button class="esc-btn" onclick="sel(20,3)">3</button><button class="esc-btn" onclick="sel(20,4)">4</button><button class="esc-btn" onclick="sel(20,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="21" data-z="N"><p class="item-txt">Tengo la sensación de trabajar mucho sin avanzar realmente — mucho movimiento pero poca dirección clara.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(21,1)">1</button><button class="esc-btn" onclick="sel(21,2)">2</button><button class="esc-btn" onclick="sel(21,3)">3</button><button class="esc-btn" onclick="sel(21,4)">4</button><button class="esc-btn" onclick="sel(21,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="22" data-z="F"><p class="item-txt">Las personas de mi entorno saben que cuando hay una crisis soy el primero en aparecer y espero eso de mí mismo.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(22,1)">1</button><button class="esc-btn" onclick="sel(22,2)">2</button><button class="esc-btn" onclick="sel(22,3)">3</button><button class="esc-btn" onclick="sel(22,4)">4</button><button class="esc-btn" onclick="sel(22,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="23" data-z="P"><p class="item-txt">Hay personas en mi equipo cuyo desempeño lleva tiempo siendo un problema y que sigo tolerando sin actuar con contundencia.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(23,1)">1</button><button class="esc-btn" onclick="sel(23,2)">2</button><button class="esc-btn" onclick="sel(23,3)">3</button><button class="esc-btn" onclick="sel(23,4)">4</button><button class="esc-btn" onclick="sel(23,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="24" data-z="E"><p class="item-txt">Reconozco que hay decisiones que tomo desde el ego o la costumbre más que desde lo que la situación realmente necesita.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(24,1)">1</button><button class="esc-btn" onclick="sel(24,2)">2</button><button class="esc-btn" onclick="sel(24,3)">3</button><button class="esc-btn" onclick="sel(24,4)">4</button><button class="esc-btn" onclick="sel(24,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="25" data-z="T"><p class="item-txt">El nivel de estrés con el que opero habitualmente sería preocupante si lo viera en otra persona, pero en mí lo normalizo.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(25,1)">1</button><button class="esc-btn" onclick="sel(25,2)">2</button><button class="esc-btn" onclick="sel(25,3)">3</button><button class="esc-btn" onclick="sel(25,4)">4</button><button class="esc-btn" onclick="sel(25,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <button class="btn-calcular" id="btn-calcular" onclick="calcular()">Ver mi resultado →</button>
+
+  <div class="resultado-wrap" id="resultado-wrap">
+
+    <div class="res-header">
+      <div class="res-tipologia">Tu zona de operación</div>
+      <div class="res-nombre" id="res-nombre"></div>
+      <div class="res-combo" id="res-combo"></div>
+      <div class="res-desc" id="res-desc"></div>
+    </div>
+
+    <div class="metricas" id="metricas-wrap">
+      <div class="metrica" id="m-N"><div class="metrica-lbl">Niebla</div><div class="metrica-val" id="mv-N"></div></div>
+      <div class="metrica" id="m-F"><div class="metrica-lbl">Fuego</div><div class="metrica-val" id="mv-F"></div></div>
+      <div class="metrica" id="m-P"><div class="metrica-lbl">Pantano</div><div class="metrica-val" id="mv-P"></div></div>
+      <div class="metrica" id="m-E"><div class="metrica-lbl">Espejo</div><div class="metrica-val" id="mv-E"></div></div>
+      <div class="metrica" id="m-T"><div class="metrica-lbl">Trinchera</div><div class="metrica-val" id="mv-T"></div></div>
+    </div>
+
+    <div class="grafica-wrap">
+      <div class="grafica-titulo">Intensidad por zona</div>
+      <div style="position:relative;width:100%;height:260px;">
+        <canvas id="grafica" role="img" aria-label="Gráfica de barras con intensidad de las cinco zonas de problema"></canvas>
+      </div>
+    </div>
+
+    <div class="alerta-trinchera" id="alerta-trinchera">
+      <div class="alerta-tit">Señal de atención — Zona Trinchera activa</div>
+      <div class="alerta-txt" id="alerta-txt"></div>
+    </div>
+
+    <div class="recs-titulo">Qué hacer con esto</div>
+    <div class="rec" id="rec1"><div class="rec-cap" id="rec1-cap"></div><div class="rec-txt" id="rec1-txt"></div></div>
+    <div class="rec" id="rec2"><div class="rec-cap" id="rec2-cap"></div><div class="rec-txt" id="rec2-txt"></div></div>
+    <div class="rec" id="rec3"><div class="rec-cap" id="rec3-cap"></div><div class="rec-txt" id="rec3-txt"></div></div>
+
+    <div class="caja-acc">
+      <h3>Guarda y comparte tu diagnóstico</h3>
+      <p>Recibe este resultado completo por correo o guárdalo como PDF.</p>
+      <div class="correo-flex">
+        <input type="email" id="correo" placeholder="tu@correo.com">
+        <button class="btn-env" id="btn-env" onclick="enviar()">Enviar →</button>
+      </div>
+      <p class="msg" id="msg-correo"></p>
+      <button class="btn-pdf" onclick="window.print()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+        Guardar como PDF
+      </button>
+    </div>
+
+    <div class="sig-test" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div>
+        <p>Continúa tu diagnóstico completo</p>
+        <span>Test 4 — La Factura · ¿cuánto te está costando el estrés?</span>
+      </div>
+      <a href="test4.html" style="background:#C9A84C;color:#111;padding:.7rem 1.5rem;border-radius:2px;font-family:inherit;font-size:15px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">Siguiente test →</a>
+    </div>
+
+  </div>
+
+  <div class="pie">
+    Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com<br>
+    El último en enterarse · Sistema de autodiagnóstico para directivos
+  </div>
+
+</div>
+
+<script>
+emailjs.init('AS4JMWcosY0dk8FBl');
+const R={};
+let miGrafica=null;
+
+function sel(i,v){
+  const card=document.querySelector('[data-i="'+i+'"]');
+  card.querySelectorAll('.esc-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===v));
+  R[i]={v,z:card.getAttribute('data-z')};
+  card.classList.add('ok');
+  const n=Object.keys(R).length;
+  document.getElementById('barra').style.width=Math.round(n/25*100)+'%';
+  document.getElementById('barra-txt').textContent=n+' / 25';
+  document.getElementById('btn-calcular').style.display=n===25?'block':'none';
+}
+
+const ZONAS={
+  N:{nombre:'La Niebla',col:'#1A5EA8'},
+  F:{nombre:'El Fuego',col:'#BA7517'},
+  P:{nombre:'El Pantano',col:'#0F6E56'},
+  E:{nombre:'El Espejo',col:'#534AB7'},
+  T:{nombre:'La Trinchera',col:'#A32D2D'}
+};
+
+const PERFILES={
+  'N-F':{nombre:'Niebla + Fuego',desc:'Operas en dos zonas que se alimentan mutuamente. La niebla te impide ver con claridad el problema de fondo y el fuego te da una salida inmediata que parece solución pero que no lo es. Cada crisis resuelta genera alivio temporal y confirma que el movimiento es suficiente. No lo es.',
+    c1:'Capítulo 5 — Salir de la niebla antes de apagar el fuego',r1:'La zona de niebla no se resuelve con más información sino con la valentía de nombrar lo que se ve aunque sea incompleto. El almirante Yamamoto lo vio con claridad cuando todos miraban para otro lado. Tu primer trabajo esta semana no es resolver la próxima urgencia sino nombrarte en voz alta el problema que llevas tiempo sin poder describir con precisión.',
+    c2:'Capítulo 5 — La trampa de la zona de fuego',r2:'El directivo que resuelve bien las crisis recibe una gratificación inmediata y poderosa. Algunos empiezan a necesitar la crisis para sentirse vivos en el cargo. No la generan deliberadamente pero tampoco la previenen activamente. La pregunta honesta es esta: ¿cuántas de las urgencias de esta semana eran previsibles y no se previeron porque prever no da la misma adrenalina que resolver?',
+    c3:'Capítulo 10 — Las semanas 1 a 4: observar antes de cambiar',r3:'Antes de intervenir en ninguna de las dos zonas, observa. Aplica el termómetro diario durante cuatro semanas. Al cabo de ese tiempo tendrás datos reales sobre cuántas urgencias aparecieron sin avisar de verdad y cuántas llegaron porque el sistema las produce sistemáticamente. Esa distinción cambia completamente el tipo de intervención necesaria.'},
+  'N-P':{nombre:'Niebla + Pantano',desc:'Una combinación especialmente costosa en energía. No sabes exactamente qué está fallando y los problemas que sí identificas llevan tiempo sin resolverse. El resultado es un directivo que trabaja mucho, avanza poco y tiene la sensación permanente de que le falta información para actuar con contundencia.',
+    c1:'Capítulo 5 — Nombrar antes de resolver',r1:'La zona de niebla tiene una solución contraintuitiva: no necesitas más datos, necesitas más valentía para nombrar lo que ya sabes aunque sea incompleto. Los problemas de pantano raramente se resuelven con más análisis. Se resuelven con una decisión que alguien toma aunque no tenga toda la información. Esta semana identifica un solo problema que puedas nombrar con precisión y toma una decisión sobre él, aunque sea pequeña.',
+    c2:'Capítulo 5 — El pantano consume sin destruir',r2:'El pantano es la zona más agotadora del ciclo precisamente porque no hay urgencia que justifique la energía que consume. El directivo en pantano raramente llega al colapso dramático. Simplemente se va apagando, con la sensación de estar trabajando mucho para lograr poco. Identifica el problema de pantano más antiguo de tu organización y hazte esta pregunta: ¿qué pasaría si simplemente lo nombraras en voz alta en la próxima reunión?',
+    c3:'Capítulo 4 — Lo que tu equipo ve y calla',r3:'En la combinación Niebla + Pantano, la información que necesitas para salir casi siempre está en las personas que te rodean y que han aprendido a no dártela. Haz la pregunta más incómoda del libro: elige a alguien de confianza y pídele que te diga qué ve que tú no estás viendo. Lo que obtengas probablemente resuelva la niebla en una conversación.'},
+  'N-E':{nombre:'Niebla + Espejo',desc:'Una combinación de alta honestidad potencial y alta resistencia real. Algo no cuadra y cuando miras hacia adentro, reconoces que parte del problema puede ser tuyo. Esa tensión entre la niebla exterior y el espejo interior es exactamente el territorio donde se producen los cambios más profundos en el liderazgo — si se tiene la valentía de quedarse en él.',
+    c1:'Capítulo 5 — La zona de espejo como oportunidad',r1:'Jack Welch describió el momento en que reconoció que el mayor obstáculo para el crecimiento de General Electric no era el mercado ni la competencia sino su propio estilo de liderazgo. Ese reconocimiento no fue debilidad — fue la decisión más estratégica de su carrera. El directivo que puede mirar al espejo sin apartar la vista tiene acceso a información que ningún consultor externo puede darle.',
+    c2:'Capítulo 4 — Las tres capas de ceguera',r2:'La niebla que sientes tiene una causa específica en el Capítulo 4: el rol, el hábito y el poder construyen tres capas que hacen invisible lo que está más cerca. La primera capa — el rol — es la más tratable. Empieza por ella. Identifica una situación donde estás respondiendo como director antes de haber respondido como persona. Esa distinción, sostenida en el tiempo, disuelve la niebla desde adentro.',
+    c3:'Capítulo 10 — Las semanas 9 a 12: la conversación que falta',r3:'En la combinación Niebla + Espejo, la conversación que falta casi siempre es contigo mismo primero. Reserva 30 minutos esta semana para hacerte por escrito las tres preguntas del Capítulo 10: ¿en qué punto del ciclo estoy? ¿cuánto tiempo llevo ahí? ¿qué estoy dispuesto a cambiar? No como ejercicio de autoayuda sino como el diagnóstico más honesto que puedes hacer.'},
+  'N-T':{nombre:'Niebla + Trinchera',desc:'La combinación más invisible del sistema. No sabes exactamente qué falla y tampoco percibes claramente que hay algo que normalizar porque la normalización ya ocurrió. Esta es la zona donde el directivo más necesita un espejo externo — alguien que vea desde afuera lo que desde adentro ya no es visible.',
+    c1:'Capítulo 5 — La trinchera hace invisible la niebla',r1:'Cuando la trinchera está activa, la niebla deja de sentirse como problema y empieza a sentirse como contexto normal. Así son las cosas aquí, siempre fue así. La primera salida no es resolver el problema sino recuperar la capacidad de verlo. El pez de David Foster Wallace no sabe qué es el agua precisamente porque lleva demasiado tiempo en ella. Tú necesitas salir del agua brevemente para verla.',
+    c2:'Capítulo 4 — Pedir el espejo que no tienes',r2:'En la Niebla + Trinchera, la herramienta más poderosa del libro es la conversación del Capítulo 4. Elige a alguien que esté fuera de tu sistema habitual — no del equipo, no de la organización — y pídele que te describa cómo te ve desde afuera. Esa perspectiva externa es exactamente lo que la combinación de estas dos zonas ha eliminado de tu acceso.',
+    c3:'Capítulo 7 — Verificar si estás cerca de la línea',r3:'La combinación Niebla + Trinchera es una de las señales más claras de proximidad a la línea de no retorno del Capítulo 7. No porque seas irrecuperable sino porque el sistema de detección temprana ya no funciona bien. Lee de nuevo las señales del Capítulo 7 y hazte la pregunta más honesta del libro: ¿estoy describiendo quién soy o justificando en quién me he convertido?'},
+  'F-P':{nombre:'Fuego + Pantano',desc:'Apaga incendios todo el día y por la noche los problemas estructurales siguen exactamente donde estaban. La urgencia del fuego consume la energía que el pantano necesita para resolverse. Y el pantano, al no resolverse, genera las condiciones para el próximo fuego. Es un ciclo que se autoalimenta y que el directivo suele describir como "así es este trabajo".',
+    c1:'Capítulo 5 — Romper el ciclo fuego-pantano',r1:'Paul Watzlawick lo llamó problema de segundo orden: la solución que aplicamos se convierte en parte del problema. El directivo que apaga incendios para gestionar el pantano no resuelve el pantano — lo alimenta. Porque cada crisis resuelta confirma que el sistema de urgencias funciona y retrasa la decisión difícil que el pantano lleva esperando. Esta semana identifica un problema de pantano y actúa sobre él antes de atender la próxima urgencia no crítica.',
+    c2:'Capítulo 9 — La desconexión programada como antídoto',r2:'El Fuego + Pantano crea un directivo que nunca tiene tiempo para lo importante porque siempre hay algo urgente. La desconexión programada del Capítulo 9 no es un lujo — es la condición para que el pensamiento estratégico sea posible. Sin espacio protegido de la urgencia, el pantano nunca recibe la atención que necesita.',
+    c3:'Capítulo 10 — Una decisión postergada, esta semana',r3:'Identifica la decisión más antigua de tu lista de pendientes. La que llevas más tiempo postergando con el argumento de que no es el momento. Esta semana es el momento. No porque las condiciones sean perfectas sino porque seguir postergándola tiene un costo que ya conoces y que el test acaba de medir.'},
+  'F-E':{nombre:'Fuego + Espejo',desc:'Uno de los perfiles más honestos del sistema. Vives en urgencia constante y al mismo tiempo reconoces que parte de esa urgencia la produces tú. Esa combinación de autoconciencia y patrón de comportamiento es exactamente lo que Welch describió cuando reconoció que era él el obstáculo. La diferencia entre saber y cambiar es siempre una decisión, no una comprensión.',
+    c1:'Capítulo 5 — La zona de espejo en el directivo de fuego',r1:'El directivo en fuego que puede verse en el espejo tiene una ventaja enorme sobre el que no puede: sabe dónde está el interruptor. No siempre sabe cómo accionarlo, pero sabe dónde está. Esta semana hazte la pregunta de Welch: ¿qué comportamiento mío específico está generando el clima de urgencia en mi equipo? Una respuesta honesta a esa pregunta vale más que cualquier plan de gestión del tiempo.',
+    c2:'Capítulo 8 — La conexión entre tu mecha y el fuego',r2:'La zona de fuego y la mecha directiva casi siempre están conectadas. El directivo cuya mecha es de control tiende a generar urgencias porque el control requiere intervención constante. El de reconocimiento necesita la crisis para demostrar valor. Revisa tu resultado del Test 2 y pregúntate: ¿cómo está contribuyendo mi mecha a mantener el fuego encendido?',
+    c3:'Capítulo 9 — El Protocolo de 24 horas para el fuego',r3:'Antes de atender la próxima urgencia que llegue a ti, aplica el Protocolo de 24 horas a la pregunta: ¿es esto realmente urgente o es urgente porque yo lo percibo así? No todas las urgencias son iguales. Y el directivo en Fuego + Espejo tiene la capacidad de hacer esa distinción — solo necesita el hábito de hacerse la pregunta antes de reaccionar.'},
+  'F-T':{nombre:'Fuego + Trinchera',desc:'La combinación más peligrosa del sistema después de Trinchera sola. Vives en urgencia constante y esa urgencia ya es tu estado normal — no lo percibes como problema sino como el ritmo natural del cargo. El fuego alimenta la trinchera y la trinchera hace invisible el fuego. Desde adentro todo parece simplemente intenso. Desde afuera, el costo es visible para todos menos para ti.',
+    c1:'Capítulo 7 — Fuego + Trinchera y la línea de no retorno',r1:'Esta combinación es una de las señales más claras del Capítulo 7. No porque el colapso sea inminente sino porque el sistema de alerta temprana ya está neutralizado. El directivo en Fuego + Trinchera no siente que está mal — siente que las circunstancias son especialmente difíciles. Esa es la definición exacta de lo que el Capítulo 1 llama el agua que ya no se percibe.',
+    c2:'Capítulo 6 — La factura que se acumula sin verse',r2:'El directivo funcional del Capítulo 6 es casi siempre un Fuego + Trinchera. Sigue cumpliendo, sigue llegando, sigue resolviendo crisis. Y la factura se acumula en cuerpo, relaciones, rendimiento e identidad sin que nadie — empezando por él — lo vea claramente. Identifica esta semana en cuál de las cuatro cuotas está más activa tu factura. Esa es tu prioridad real, no la próxima urgencia.',
+    c3:'Capítulo 9 — Una válvula de emergencia ahora',r3:'El Fuego + Trinchera necesita una intervención inmediata antes de cualquier plan. Esta semana instala una sola válvula del Capítulo 9 — la más pequeña que puedas sostener — y defiéndela con la misma energía con la que defiendes una reunión importante. No como solución definitiva. Como señal de que el sistema puede cambiar.'},
+  'P-E':{nombre:'Pantano + Espejo',desc:'Problemas que no se resuelven y la sospecha de que tú eres parte de ellos. Esta combinación tiene una honestidad poco común en el liderazgo directivo — y también una trampa específica: la autoconciencia sin acción se convierte en culpa que paraliza en lugar de cambiar.',
+    c1:'Capítulo 5 — El espejo no es suficiente sin la decisión',r1:'Welch reconoció el problema. Pero lo que cambió General Electric no fue el reconocimiento — fue la decisión que vino después. El directivo en Pantano + Espejo suele quedarse demasiado tiempo en el reconocimiento. Esta semana elige un problema de pantano que reconoces como parcialmente tuyo y toma una decisión sobre él, aunque sea imperfecta. La dirección importa más que la precisión.',
+    c2:'Capítulo 8 — La conexión entre tu patrón y el pantano',r2:'Los problemas de pantano que no se resuelven casi siempre tienen una conexión con el estilo de liderazgo del directivo. El que tiene mecha de control tiende a crear pantanos de decisiones postergadas porque ninguna opción es suficientemente perfecta. El de lealtad crea pantanos relacionales donde nadie dice la verdad. Revisa tu resultado del Test 2 y pregúntate: ¿qué tipo de pantano produce mi mecha específica?',
+    c3:'Capítulo 10 — Las semanas 9 a 12: la conversación pendiente',r3:'En el Pantano + Espejo, la conversación que falta es casi siempre con alguien específico cuyo desempeño o relación llevas tiempo tolerando sin abordar. Esa conversación es el pantano más costoso. El Capítulo 10 tiene el protocolo para tenerla. No con garantía de que salga perfecta sino con la certeza de que seguir postergándola tiene un costo mayor que cualquier incomodidad de la conversación.'},
+  'P-T':{nombre:'Pantano + Trinchera',desc:'Los problemas llevan tiempo sin resolverse y esa situación ya dejó de sentirse como problema. Esta es la zona donde las organizaciones se quedan atrapadas durante años sin que nadie pueda nombrar exactamente qué salió mal. El directivo en Pantano + Trinchera no está en crisis — está en apagamiento gradual.',
+    c1:'Capítulo 5 — La trinchera hace permanente el pantano',r1:'Cuando la trinchera normaliza el pantano, la organización desarrolla una memoria institucional del fracaso: siempre intentamos resolver esto y nunca funciona. Esa memoria es más destructiva que cualquier problema concreto porque elimina la energía para intentarlo. La primera intervención no es resolver el pantano sino recuperar la creencia de que es resoluble. Una decisión pequeña y visible esta semana puede hacer más por eso que cualquier plan estratégico.',
+    c2:'Capítulo 4 — El equipo que ya no trae nada',r2:'En el Pantano + Trinchera, el equipo ha aprendido a no traer problemas porque la respuesta habitual es que así son las cosas o que ya se intentó. Haz la pregunta del Capítulo 4: ¿cuándo fue la última vez que alguien te trajo un problema difícil esperando que lo resolvieras? Si la respuesta es hace mucho tiempo, el pantano lleva más tiempo activo de lo que crees.',
+    c3:'Capítulo 9 — El ritual de cierre como reinicio',r3:'El directivo en Pantano + Trinchera necesita una práctica que recupere la capacidad de ver el día como algo que avanzó, aunque sea poco. El ritual de cierre diario del Capítulo 9 — qué funcionó, qué cambiarías, qué sueltas esta noche — no resuelve el pantano pero recupera la percepción de agencia que la trinchera ha eliminado gradualmente.'},
+  'E-T':{nombre:'Espejo + Trinchera',desc:'Ves el problema y al mismo tiempo ya te acostumbraste a él. Esta es la combinación más exigente emocionalmente del sistema: la autoconciencia sin salida visible genera una forma de resignación que el directivo suele describir como realismo. No siempre lo es.',
+    c1:'Capítulo 7 — La frase más peligrosa del directivo',r1:'El Capítulo 7 describe la señal más clara de que se está cruzando la línea: cuando el directivo empieza a describir síntomas de estrés crónico como rasgos de personalidad. Soy muy exigente. Soy poco paciente. Soy así, intenso. Si reconoces ese lenguaje en ti, no es descripción de carácter — es normalización de un patrón que puede modificarse si se identifica como lo que es.',
+    c2:'Capítulo 5 — Salir del espejo para salir de la trinchera',r2:'La trampa del Espejo + Trinchera es que la autoconciencia se convierte en argumento para no actuar: ya sé que el problema soy yo, pero así soy yo y esto es lo que hay. Eso no es honestidad — es la trinchera usando el espejo como escudo. El paso que falta no es más autoconciencia sino una decisión concreta sobre qué cambias esta semana, aunque sea algo pequeño.',
+    c3:'Capítulo 10 — Una cosa, con fecha, con tu nombre',r3:'El Espejo + Trinchera necesita una decisión con consecuencias visibles, no una reflexión más. Esta semana elige una cosa que reconoces como tuya y que llevas tiempo sin cambiar. Escríbela. Ponle fecha. Compártela con alguien. El acto de hacerla visible para otra persona es lo que diferencia la intención del cambio real.'}
+};
+
+function calcular(){
+  const ss={N:0,F:0,P:0,E:0,T:0};
+  for(const k in R) ss[R[k].z]+=R[k].v;
+  const orden=Object.entries(ss).sort((a,b)=>b[1]-a[1]);
+  const dom=orden[0][0], seg=orden[1][0];
+  const esTrinchera=dom==='T'||seg==='T';
+  const pcts={};
+  for(const z in ss) pcts[z]=Math.round((ss[z]/25)*100);
+
+  const keyA=dom+'-'+seg, keyB=seg+'-'+dom;
+  const p=PERFILES[keyA]||PERFILES[keyB]||PERFILES['F-T'];
+
+  document.getElementById('res-nombre').textContent=ZONAS[dom].nombre+' · '+ZONAS[seg].nombre;
+  document.getElementById('res-combo').textContent='Zona dominante: '+ZONAS[dom].nombre+' · Zona secundaria: '+ZONAS[seg].nombre;
+  document.getElementById('res-desc').textContent=p.desc;
+
+  const zids=['N','F','P','E','T'];
+  zids.forEach(z=>{
+    document.getElementById('mv-'+z).textContent=pcts[z]+'%';
+    if(z===dom) document.getElementById('m-'+z).classList.add('dom');
+  });
+
+  if(miGrafica) miGrafica.destroy();
+  miGrafica=new Chart(document.getElementById('grafica'),{
+    type:'bar',
+    data:{
+      labels:['Niebla','Fuego','Pantano','Espejo','Trinchera'],
+      datasets:[{
+        label:'Intensidad',
+        data:[pcts.N,pcts.F,pcts.P,pcts.E,pcts.T],
+        backgroundColor:['#1A5EA8','#BA7517','#0F6E56','#534AB7','#A32D2D'],
+        borderRadius:4,barPercentage:.6
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'%'}}},
+      scales:{
+        y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:12}},grid:{color:'#F0F0EE'}},
+        x:{ticks:{font:{size:11}},grid:{display:false}}
+      }
+    }
+  });
+
+  if(esTrinchera){
+    const a=document.getElementById('alerta-trinchera');
+    a.style.display='block';
+    document.getElementById('alerta-txt').textContent='La zona Trinchera aparece en tu perfil dominante. Esta es la señal más importante que este test puede darte: el estrés ha dejado de sentirse como problema y se ha convertido en el contexto desde el que operas. No es una condena — es exactamente el momento en que todavía puedes elegir. Lee de nuevo el Capítulo 7 antes de continuar.';
+  }
+
+  document.getElementById('rec1-cap').textContent=p.c1;document.getElementById('rec1-txt').textContent=p.r1;
+  document.getElementById('rec2-cap').textContent=p.c2;document.getElementById('rec2-txt').textContent=p.r2;
+  document.getElementById('rec3-cap').textContent=p.c3;document.getElementById('rec3-txt').textContent=p.r3;
+
+  window._r={p,pcts,dom,seg,esTrinchera};
+  // Guardar en localStorage
+  localStorage.setItem('test3_resultado', JSON.stringify({
+    zonaDOM: ZONAS[dom].nombre,
+    zonaSEG: ZONAS[seg].nombre,
+    descripcion: p.desc,
+    alertaTrinchera: esTrinchera,
+    pctNiebla: pcts.N,
+    pctFuego: pcts.F,
+    pctPantano: pcts.P,
+    pctEspejo: pcts.E,
+    pctTrinchera: pcts.T,
+    rec1titulo: p.c1, rec1texto: p.r1,
+    rec2titulo: p.c2, rec2texto: p.r2,
+    rec3titulo: p.c3, rec3texto: p.r3,
+    fecha: new Date().toLocaleDateString('es-MX')
+  }));
+  localStorage.setItem('test3_visitado','1');
+  document.getElementById('btn-calcular').style.display='none';
+  document.getElementById('resultado-wrap').style.display='block';
+  document.getElementById('resultado-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function enviar(){
+  const correo=document.getElementById('correo').value.trim();
+  const nombre=document.getElementById('nombre').value.trim()||'Directivo';
+  const cargo=document.getElementById('cargo').value.trim();
+  const org=document.getElementById('org').value.trim();
+  const msg=document.getElementById('msg-correo');
+  const btn=document.getElementById('btn-env');
+  if(!correo||!correo.includes('@')){msg.textContent='Escribe un correo válido.';msg.className='msg err';return;}
+  const r=window._r;if(!r) return;
+  btn.disabled=true;btn.textContent='Enviando...';msg.textContent='';
+  const texto=
+    'TU ZONA: '+ZONAS[r.dom].nombre+' + '+ZONAS[r.seg].nombre+'\n\n'+
+    r.p.desc+'\n\n'+
+    (r.esTrinchera?'ATENCIÓN — ZONA TRINCHERA ACTIVA:\nLa zona Trinchera aparece en tu perfil. El estrés ha dejado de sentirse como problema y se ha convertido en contexto normal. Lee el Capítulo 7.\n\n':'')+
+    '━━━ QUÉ HACER CON ESTO ━━━\n\n'+
+    r.p.c1+'\n'+r.p.r1+'\n\n'+
+    r.p.c2+'\n'+r.p.r2+'\n\n'+
+    r.p.c3+'\n'+r.p.r3+'\n\n'+
+    '━━━ INTENSIDAD POR ZONA ━━━\n'+
+    'Niebla: '+r.pcts.N+'% · Fuego: '+r.pcts.F+'% · Pantano: '+r.pcts.P+'% · Espejo: '+r.pcts.E+'% · Trinchera: '+r.pcts.T+'%\n\n'+
+    'Para guardar en PDF entra a estres.ciemx.com y usa el botón "Guardar como PDF".\n\n'+
+    'Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com';
+  emailjs.send('service_j8od1sk','template_2h2t21c',{
+    nombre,cargo,organizacion:org,
+    puntuacion:ZONAS[r.dom].nombre+' + '+ZONAS[r.seg].nombre,
+    perfil:'Zona '+ZONAS[r.dom].nombre,
+    resultado:texto,to_email:correo
+  }).then(()=>{
+    msg.textContent='✓ Tu diagnóstico fue enviado a '+correo;msg.className='msg ok';
+    btn.textContent='Enviado ✓';
+  }).catch(()=>{
+    msg.textContent='Error al enviar. Verifica el correo e intenta de nuevo.';msg.className='msg err';
+    btn.disabled=false;btn.textContent='Enviar →';
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test 4 — La Factura | El último en enterarse</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --negro:#1A1A1A;--negro-suave:#2C2C2C;
+  --dorado:#C9A84C;--dorado-claro:#F5EDD6;--dorado-oscuro:#8B6914;
+  --cuerpo:#A32D2D;--cuerpo-c:#FCF0F0;--cuerpo-t:#791F1F;
+  --relaciones:#534AB7;--relaciones-c:#EEEDFE;--relaciones-t:#26215C;
+  --rendimiento:#BA7517;--rendimiento-c:#FDF3E3;--rendimiento-t:#633806;
+  --identidad:#1A5EA8;--identidad-c:#EAF2FB;--identidad-t:#0C447C;
+  --verde:#0F6E56;--verde-c:#E8F5F0;
+  --borde:#E0E0DC;--gris:#F5F5F3;--texto:#222;--muted:#666;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F2F0EB;color:var(--texto);min-height:100vh}
+.encabezado{background:var(--negro);color:var(--dorado);padding:2.25rem 1.5rem 1.75rem;text-align:center;border-bottom:3px solid var(--dorado)}
+.encabezado .serie{font-size:11px;letter-spacing:.15em;opacity:.75;margin-bottom:8px;text-transform:uppercase;color:var(--dorado)}
+.encabezado h1{font-size:26px;font-weight:700;margin-bottom:8px;line-height:1.3;color:white}
+.encabezado .sub{font-size:14px;color:var(--dorado);opacity:.9}
+.contenedor{max-width:740px;margin:0 auto;padding:1.75rem 1rem 3rem}
+.caja-intro{background:white;border:1px solid var(--borde);border-left:4px solid var(--dorado);border-radius:0 10px 10px 0;padding:1.25rem 1.5rem;margin-bottom:1.75rem}
+.caja-intro p{font-size:15px;line-height:1.75;color:#333}
+.caja-intro strong{color:var(--dorado-oscuro)}
+.datos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.75rem}
+.datos-grid .full{grid-column:1/-1}
+.campo label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.campo input{width:100%;padding:10px 14px;border:1px solid var(--borde);border-radius:8px;font-size:15px;color:var(--texto);background:white;transition:border .2s}
+.campo input:focus{outline:none;border-color:var(--dorado)}
+.barra-wrap{display:flex;align-items:center;gap:12px;margin:1.5rem 0;background:white;border:1px solid var(--borde);border-radius:10px;padding:.85rem 1.25rem;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.barra-bg{flex:1;height:6px;background:#E8E4DC;border-radius:3px}
+.barra-fill{height:6px;background:var(--dorado);border-radius:3px;transition:width .3s;width:0%}
+.barra-txt{font-size:13px;color:#999;min-width:55px;text-align:right}
+.sec-label{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:2rem 0 .75rem;padding:.6rem 1rem;border-radius:6px;color:white}
+.item{background:white;border:1px solid var(--borde);border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:10px;transition:border-color .2s}
+.item.ok{border-left:3px solid var(--dorado);border-color:var(--dorado)}
+.item-txt{font-size:15px;line-height:1.6;color:#222;margin-bottom:.9rem}
+.esc-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.esc-lbl{font-size:12px;color:#999;min-width:90px}
+.esc-lbl.r{text-align:right}
+.esc-btns{display:flex;gap:6px;flex:1;justify-content:center}
+.esc-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--borde);background:white;font-size:14px;font-weight:600;color:#888;cursor:pointer;transition:all .15s}
+.esc-btn:hover{background:var(--dorado-claro);border-color:var(--dorado);color:var(--dorado-oscuro)}
+.esc-btn.sel{background:var(--negro);border-color:var(--dorado);color:var(--dorado)}
+.btn-calcular{display:none;width:100%;padding:14px;background:var(--negro);color:var(--dorado);border:2px solid var(--dorado);border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:1.5rem;letter-spacing:.05em;transition:all .2s}
+.btn-calcular:hover{background:var(--dorado);color:var(--negro)}
+.resultado-wrap{display:none;margin-top:1.5rem}
+
+.factura-header{background:var(--negro);border:2px solid var(--dorado);border-radius:12px;padding:2rem;margin-bottom:1.25rem}
+.factura-label{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--dorado);margin-bottom:8px}
+.factura-titulo{font-size:32px;font-weight:700;color:white;margin-bottom:6px}
+.factura-sub{font-size:14px;color:var(--dorado);margin-bottom:16px}
+.factura-desc{font-size:15px;line-height:1.8;color:#CCCCCC}
+
+.cuotas-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:1.25rem}
+.cuota-card{background:white;border:1px solid var(--borde);border-radius:12px;padding:1.25rem;border-top:4px solid}
+.cuota-nombre{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.cuota-puntos{font-size:28px;font-weight:700;margin-bottom:4px}
+.cuota-nivel{font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:8px}
+.cuota-barra-bg{width:100%;height:8px;background:#F0EEEA;border-radius:4px;margin-bottom:8px}
+.cuota-barra-fill{height:8px;border-radius:4px;transition:width .6s}
+.cuota-desc{font-size:13px;color:#555;line-height:1.5}
+
+.grafica-wrap{background:white;border:1px solid var(--borde);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.grafica-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:1rem}
+
+.perfil-funcional{display:none;background:var(--negro);border:2px solid #A32D2D;border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+.perfil-funcional .pf-tit{font-size:13px;font-weight:700;color:#E24B4A;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.perfil-funcional .pf-txt{font-size:14px;color:#CCCCCC;line-height:1.7}
+
+.cuota-critica-wrap{background:white;border:1px solid var(--borde);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;border-left:5px solid}
+.cuota-critica-tit{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem}
+.cuota-critica-desc{font-size:15px;line-height:1.8;color:#333}
+
+.recs-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:.75rem}
+.rec{background:white;border:1px solid var(--borde);border-left:4px solid var(--dorado);border-radius:0 10px 10px 0;padding:1.1rem 1.25rem;margin-bottom:10px}
+.rec-cap{font-size:13px;font-weight:700;color:var(--dorado-oscuro);margin-bottom:6px}
+.rec-txt{font-size:14px;line-height:1.75;color:#333}
+
+.pregunta-cierre{background:var(--negro);border:1px solid var(--dorado);border-radius:12px;padding:1.5rem;margin-bottom:1.25rem;text-align:center}
+.pregunta-cierre p{font-size:16px;color:white;line-height:1.7;font-style:italic}
+.pregunta-cierre span{font-size:13px;color:var(--dorado);display:block;margin-top:8px}
+
+.caja-acc{background:white;border:1px solid var(--borde);border-radius:12px;padding:1.25rem 1.5rem;margin-top:1.25rem}
+.caja-acc h3{font-size:15px;font-weight:700;color:#333;margin-bottom:4px}
+.caja-acc p{font-size:14px;color:#666;margin-bottom:.75rem}
+.correo-flex{display:flex;gap:8px;margin-bottom:8px}
+.correo-flex input{flex:1;padding:10px 14px;border:1px solid var(--borde);border-radius:8px;font-size:15px}
+.correo-flex input:focus{outline:none;border-color:var(--dorado)}
+.btn-env{padding:10px 18px;background:var(--negro);color:var(--dorado);border:1px solid var(--dorado);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s}
+.btn-env:hover{background:var(--dorado);color:var(--negro)}
+.btn-env:disabled{background:#aaa;border-color:#aaa;color:white;cursor:not-allowed}
+.btn-pdf{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:#F2F0EB;color:#444;border:1px solid var(--borde);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}
+.btn-pdf:hover{background:#E8E4DC}
+.msg{font-size:14px;margin-top:6px}
+.msg.ok{color:var(--verde)}
+.msg.err{color:var(--cuerpo)}
+.pie{text-align:center;font-size:13px;color:#aaa;margin-top:3rem;padding-bottom:1rem}
+@media(max-width:500px){
+  .datos-grid{grid-template-columns:1fr}.datos-grid .full{grid-column:1}
+  .cuotas-grid{grid-template-columns:1fr}
+  .esc-lbl{display:none}
+}
+@media print{
+  body{background:white!important}
+  .encabezado{background:var(--negro)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .barra-wrap,.btn-calcular,.caja-acc,.pie{display:none!important}
+  .item{break-inside:avoid}
+  .resultado-wrap{display:block!important}
+  .cuota-card,.rec,.grafica-wrap,.factura-header,.pregunta-cierre{break-inside:avoid}
+  .contenedor{padding:.5rem}
+  @page{margin:1.5cm}
+}
+</style>
+</head>
+<body>
+
+<div class="encabezado">
+  <div class="serie">El último en enterarse · Sistema de autodiagnóstico para directivos</div>
+  <h1>Test 4 — La Factura</h1>
+  <div class="sub">¿Cuánto te está costando el estrés en cada nivel de tu vida?</div>
+</div>
+
+<div class="contenedor">
+
+  <div class="caja-intro">
+    <p>Los tests anteriores diagnostican dónde estás, cómo explotas y dónde vive el problema. Este test responde la pregunta que pocos se hacen en voz alta: <strong>¿cuánto te está costando todo eso?</strong><br><br>
+    La escala está invertida: <strong>1 = no me identifico · 3 = me identifico parcialmente · 5 = me describe con precisión</strong><br><br>
+    Responde pensando en los <strong>últimos seis meses</strong>, no solo en las últimas semanas.</p>
+  </div>
+
+  <div class="datos-grid">
+    <div class="campo full"><label for="nombre">Nombre completo</label><input type="text" id="nombre" placeholder="Tu nombre"></div>
+    <div class="campo"><label for="cargo">Cargo</label><input type="text" id="cargo" placeholder="Director, Rector, Gerente..."></div>
+    <div class="campo"><label for="org">Organización</label><input type="text" id="org" placeholder="Tu institución"></div>
+  </div>
+
+  <div class="barra-wrap">
+    <div class="barra-bg"><div class="barra-fill" id="barra"></div></div>
+    <span class="barra-txt" id="barra-txt">0 / 40</span>
+  </div>
+
+  <div class="sec-label" style="background:var(--cuerpo)">Cuota 1 — El cuerpo</div>
+  <div class="item" data-i="1" data-c="C"><p class="item-txt">Me cuesta conciliar el sueño o me despierto en la madrugada con la cabeza activa.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(1,1)">1</button><button class="esc-btn" onclick="sel(1,2)">2</button><button class="esc-btn" onclick="sel(1,3)">3</button><button class="esc-btn" onclick="sel(1,4)">4</button><button class="esc-btn" onclick="sel(1,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="2" data-c="C"><p class="item-txt">Tengo tensión física habitual en cuello, hombros, mandíbula o espalda que ya asumo como normal.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(2,1)">1</button><button class="esc-btn" onclick="sel(2,2)">2</button><button class="esc-btn" onclick="sel(2,3)">3</button><button class="esc-btn" onclick="sel(2,4)">4</button><button class="esc-btn" onclick="sel(2,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="3" data-c="C"><p class="item-txt">Mi digestión, sistema inmune o niveles de energía se han deteriorado en los últimos meses.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(3,1)">1</button><button class="esc-btn" onclick="sel(3,2)">2</button><button class="esc-btn" onclick="sel(3,3)">3</button><button class="esc-btn" onclick="sel(3,4)">4</button><button class="esc-btn" onclick="sel(3,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="4" data-c="C"><p class="item-txt">Recurro a estimulantes, alcohol, pantallas o comida para gestionar el nivel de tensión del día.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(4,1)">1</button><button class="esc-btn" onclick="sel(4,2)">2</button><button class="esc-btn" onclick="sel(4,3)">3</button><button class="esc-btn" onclick="sel(4,4)">4</button><button class="esc-btn" onclick="sel(4,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="5" data-c="C"><p class="item-txt">Postergo revisiones médicas o señales físicas que en otra persona me preocuparían.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(5,1)">1</button><button class="esc-btn" onclick="sel(5,2)">2</button><button class="esc-btn" onclick="sel(5,3)">3</button><button class="esc-btn" onclick="sel(5,4)">4</button><button class="esc-btn" onclick="sel(5,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="6" data-c="C"><p class="item-txt">Me levanto cansado aunque haya dormido las horas suficientes.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(6,1)">1</button><button class="esc-btn" onclick="sel(6,2)">2</button><button class="esc-btn" onclick="sel(6,3)">3</button><button class="esc-btn" onclick="sel(6,4)">4</button><button class="esc-btn" onclick="sel(6,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="7" data-c="C"><p class="item-txt">Mi cuerpo no descansa de verdad los fines de semana, sigue en modo alerta.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(7,1)">1</button><button class="esc-btn" onclick="sel(7,2)">2</button><button class="esc-btn" onclick="sel(7,3)">3</button><button class="esc-btn" onclick="sel(7,4)">4</button><button class="esc-btn" onclick="sel(7,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="8" data-c="C"><p class="item-txt">He tenido episodios de taquicardia, presión alta u otras señales físicas relacionadas con la tensión.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(8,1)">1</button><button class="esc-btn" onclick="sel(8,2)">2</button><button class="esc-btn" onclick="sel(8,3)">3</button><button class="esc-btn" onclick="sel(8,4)">4</button><button class="esc-btn" onclick="sel(8,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="9" data-c="C"><p class="item-txt">Mi alimentación y mis hábitos físicos han empeorado en los últimos meses sin que lo haya atendido.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(9,1)">1</button><button class="esc-btn" onclick="sel(9,2)">2</button><button class="esc-btn" onclick="sel(9,3)">3</button><button class="esc-btn" onclick="sel(9,4)">4</button><button class="esc-btn" onclick="sel(9,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="10" data-c="C"><p class="item-txt">El nivel de energía con el que termino el día es notablemente menor al que tenía hace uno o dos años.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(10,1)">1</button><button class="esc-btn" onclick="sel(10,2)">2</button><button class="esc-btn" onclick="sel(10,3)">3</button><button class="esc-btn" onclick="sel(10,4)">4</button><button class="esc-btn" onclick="sel(10,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+
+  <div class="sec-label" style="background:var(--relaciones)">Cuota 2 — Las relaciones</div>
+  <div class="item" data-i="11" data-c="R"><p class="item-txt">Las personas cercanas han notado cambios en mi forma de relacionarme aunque yo no los vea claramente.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(11,1)">1</button><button class="esc-btn" onclick="sel(11,2)">2</button><button class="esc-btn" onclick="sel(11,3)">3</button><button class="esc-btn" onclick="sel(11,4)">4</button><button class="esc-btn" onclick="sel(11,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="12" data-c="R"><p class="item-txt">Estoy físicamente con mi familia o equipo pero mi cabeza sigue en el trabajo.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(12,1)">1</button><button class="esc-btn" onclick="sel(12,2)">2</button><button class="esc-btn" onclick="sel(12,3)">3</button><button class="esc-btn" onclick="sel(12,4)">4</button><button class="esc-btn" onclick="sel(12,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="13" data-c="R"><p class="item-txt">Hay conversaciones importantes con personas cercanas que se han reducido o dejado de ocurrir.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(13,1)">1</button><button class="esc-btn" onclick="sel(13,2)">2</button><button class="esc-btn" onclick="sel(13,3)">3</button><button class="esc-btn" onclick="sel(13,4)">4</button><button class="esc-btn" onclick="sel(13,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="14" data-c="R"><p class="item-txt">Mi equipo o familia adapta su comportamiento según cómo me ven llegar, no según el contexto real.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(14,1)">1</button><button class="esc-btn" onclick="sel(14,2)">2</button><button class="esc-btn" onclick="sel(14,3)">3</button><button class="esc-btn" onclick="sel(14,4)">4</button><button class="esc-btn" onclick="sel(14,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="15" data-c="R"><p class="item-txt">El nivel de intimidad real con las personas que más me importan ha disminuido en el último año.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(15,1)">1</button><button class="esc-btn" onclick="sel(15,2)">2</button><button class="esc-btn" onclick="sel(15,3)">3</button><button class="esc-btn" onclick="sel(15,4)">4</button><button class="esc-btn" onclick="sel(15,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="16" data-c="R"><p class="item-txt">Hay personas cercanas que han dejado de contarme cosas porque anticipan mi reacción.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(16,1)">1</button><button class="esc-btn" onclick="sel(16,2)">2</button><button class="esc-btn" onclick="sel(16,3)">3</button><button class="esc-btn" onclick="sel(16,4)">4</button><button class="esc-btn" onclick="sel(16,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="17" data-c="R"><p class="item-txt">Mi pareja, hijos o amigos cercanos me han dicho directa o indirectamente que estoy diferente.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(17,1)">1</button><button class="esc-btn" onclick="sel(17,2)">2</button><button class="esc-btn" onclick="sel(17,3)">3</button><button class="esc-btn" onclick="sel(17,4)">4</button><button class="esc-btn" onclick="sel(17,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="18" data-c="R"><p class="item-txt">La calidad de mi presencia en reuniones familiares o momentos importantes ha disminuido.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(18,1)">1</button><button class="esc-btn" onclick="sel(18,2)">2</button><button class="esc-btn" onclick="sel(18,3)">3</button><button class="esc-btn" onclick="sel(18,4)">4</button><button class="esc-btn" onclick="sel(18,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="19" data-c="R"><p class="item-txt">He cancelado o reducido tiempo con personas importantes por razones de trabajo con más frecuencia que antes.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(19,1)">1</button><button class="esc-btn" onclick="sel(19,2)">2</button><button class="esc-btn" onclick="sel(19,3)">3</button><button class="esc-btn" onclick="sel(19,4)">4</button><button class="esc-btn" onclick="sel(19,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="20" data-c="R"><p class="item-txt">Hay relaciones que eran importantes para mí y que se han deteriorado sin que haya hecho algo para recuperarlas.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(20,1)">1</button><button class="esc-btn" onclick="sel(20,2)">2</button><button class="esc-btn" onclick="sel(20,3)">3</button><button class="esc-btn" onclick="sel(20,4)">4</button><button class="esc-btn" onclick="sel(20,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+
+  <div class="sec-label" style="background:var(--rendimiento)">Cuota 3 — El rendimiento</div>
+  <div class="item" data-i="21" data-c="D"><p class="item-txt">Tomo decisiones importantes en estados de cansancio o presión que después reconozco que no eran los ideales.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(21,1)">1</button><button class="esc-btn" onclick="sel(21,2)">2</button><button class="esc-btn" onclick="sel(21,3)">3</button><button class="esc-btn" onclick="sel(21,4)">4</button><button class="esc-btn" onclick="sel(21,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="22" data-c="D"><p class="item-txt">Trabajo más horas que antes pero no tengo la sensación de avanzar proporcionalmente más.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(22,1)">1</button><button class="esc-btn" onclick="sel(22,2)">2</button><button class="esc-btn" onclick="sel(22,3)">3</button><button class="esc-btn" onclick="sel(22,4)">4</button><button class="esc-btn" onclick="sel(22,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="23" data-c="D"><p class="item-txt">Me cuesta más que antes concentrarme en una sola cosa durante un período prolongado.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(23,1)">1</button><button class="esc-btn" onclick="sel(23,2)">2</button><button class="esc-btn" onclick="sel(23,3)">3</button><button class="esc-btn" onclick="sel(23,4)">4</button><button class="esc-btn" onclick="sel(23,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="24" data-c="D"><p class="item-txt">La calidad de mis decisiones al final del día es notablemente diferente a la del inicio.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(24,1)">1</button><button class="esc-btn" onclick="sel(24,2)">2</button><button class="esc-btn" onclick="sel(24,3)">3</button><button class="esc-btn" onclick="sel(24,4)">4</button><button class="esc-btn" onclick="sel(24,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="25" data-c="D"><p class="item-txt">Confundo estar ocupado con ser productivo y uso la actividad como forma de no parar.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(25,1)">1</button><button class="esc-btn" onclick="sel(25,2)">2</button><button class="esc-btn" onclick="sel(25,3)">3</button><button class="esc-btn" onclick="sel(25,4)">4</button><button class="esc-btn" onclick="sel(25,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="26" data-c="D"><p class="item-txt">He cometido errores o tomado decisiones que atribuyo directamente al agotamiento o la presión sostenida.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(26,1)">1</button><button class="esc-btn" onclick="sel(26,2)">2</button><button class="esc-btn" onclick="sel(26,3)">3</button><button class="esc-btn" onclick="sel(26,4)">4</button><button class="esc-btn" onclick="sel(26,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="27" data-c="D"><p class="item-txt">Mi capacidad de pensar con perspectiva estratégica ha disminuido, vivo más en lo urgente que en lo importante.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(27,1)">1</button><button class="esc-btn" onclick="sel(27,2)">2</button><button class="esc-btn" onclick="sel(27,3)">3</button><button class="esc-btn" onclick="sel(27,4)">4</button><button class="esc-btn" onclick="sel(27,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="28" data-c="D"><p class="item-txt">Necesito más tiempo que antes para recuperarme después de un esfuerzo intenso.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(28,1)">1</button><button class="esc-btn" onclick="sel(28,2)">2</button><button class="esc-btn" onclick="sel(28,3)">3</button><button class="esc-btn" onclick="sel(28,4)">4</button><button class="esc-btn" onclick="sel(28,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="29" data-c="D"><p class="item-txt">Mi creatividad o capacidad de encontrar soluciones nuevas se ha reducido en los últimos meses.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(29,1)">1</button><button class="esc-btn" onclick="sel(29,2)">2</button><button class="esc-btn" onclick="sel(29,3)">3</button><button class="esc-btn" onclick="sel(29,4)">4</button><button class="esc-btn" onclick="sel(29,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="30" data-c="D"><p class="item-txt">Siento que doy menos de lo que podría dar si estuviera en mejores condiciones.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(30,1)">1</button><button class="esc-btn" onclick="sel(30,2)">2</button><button class="esc-btn" onclick="sel(30,3)">3</button><button class="esc-btn" onclick="sel(30,4)">4</button><button class="esc-btn" onclick="sel(30,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+
+  <div class="sec-label" style="background:var(--identidad)">Cuota 4 — La identidad</div>
+  <div class="item" data-i="31" data-c="I"><p class="item-txt">Hay cosas que hacía o disfrutaba antes del cargo que hoy prácticamente han desaparecido de mi vida.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(31,1)">1</button><button class="esc-btn" onclick="sel(31,2)">2</button><button class="esc-btn" onclick="sel(31,3)">3</button><button class="esc-btn" onclick="sel(31,4)">4</button><button class="esc-btn" onclick="sel(31,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="32" data-c="I"><p class="item-txt">Cuando hay tiempo libre sin agenda, siento incomodidad o una urgencia de hacer algo productivo.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(32,1)">1</button><button class="esc-btn" onclick="sel(32,2)">2</button><button class="esc-btn" onclick="sel(32,3)">3</button><button class="esc-btn" onclick="sel(32,4)">4</button><button class="esc-btn" onclick="sel(32,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="33" data-c="I"><p class="item-txt">La pregunta de quién soy fuera del cargo me genera incomodidad o no tiene una respuesta clara.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(33,1)">1</button><button class="esc-btn" onclick="sel(33,2)">2</button><button class="esc-btn" onclick="sel(33,3)">3</button><button class="esc-btn" onclick="sel(33,4)">4</button><button class="esc-btn" onclick="sel(33,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="34" data-c="I"><p class="item-txt">Necesito el cargo o el reconocimiento que viene con él para sentirme valioso o relevante.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(34,1)">1</button><button class="esc-btn" onclick="sel(34,2)">2</button><button class="esc-btn" onclick="sel(34,3)">3</button><button class="esc-btn" onclick="sel(34,4)">4</button><button class="esc-btn" onclick="sel(34,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="35" data-c="I"><p class="item-txt">Si mañana desapareciera el cargo, no sabría bien qué quedaría de mí.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(35,1)">1</button><button class="esc-btn" onclick="sel(35,2)">2</button><button class="esc-btn" onclick="sel(35,3)">3</button><button class="esc-btn" onclick="sel(35,4)">4</button><button class="esc-btn" onclick="sel(35,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="36" data-c="I"><p class="item-txt">He perdido contacto con aficiones, amistades o partes de mí mismo que antes eran importantes.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(36,1)">1</button><button class="esc-btn" onclick="sel(36,2)">2</button><button class="esc-btn" onclick="sel(36,3)">3</button><button class="esc-btn" onclick="sel(36,4)">4</button><button class="esc-btn" onclick="sel(36,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="37" data-c="I"><p class="item-txt">La calma me genera ansiedad, necesito movimiento, urgencia o resolución para sentirme bien.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(37,1)">1</button><button class="esc-btn" onclick="sel(37,2)">2</button><button class="esc-btn" onclick="sel(37,3)">3</button><button class="esc-btn" onclick="sel(37,4)">4</button><button class="esc-btn" onclick="sel(37,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="38" data-c="I"><p class="item-txt">Me cuesta recordar con precisión cómo era antes de tener este nivel de responsabilidad.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(38,1)">1</button><button class="esc-btn" onclick="sel(38,2)">2</button><button class="esc-btn" onclick="sel(38,3)">3</button><button class="esc-btn" onclick="sel(38,4)">4</button><button class="esc-btn" onclick="sel(38,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="39" data-c="I"><p class="item-txt">El cargo define cómo me presento ante los demás más de lo que yo elegiría conscientemente.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(39,1)">1</button><button class="esc-btn" onclick="sel(39,2)">2</button><button class="esc-btn" onclick="sel(39,3)">3</button><button class="esc-btn" onclick="sel(39,4)">4</button><button class="esc-btn" onclick="sel(39,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+  <div class="item" data-i="40" data-c="I"><p class="item-txt">Hay una versión de mí que quisiera recuperar y que siento cada vez más lejana.</p><div class="esc-wrap"><span class="esc-lbl">no me identifico</span><div class="esc-btns"><button class="esc-btn" onclick="sel(40,1)">1</button><button class="esc-btn" onclick="sel(40,2)">2</button><button class="esc-btn" onclick="sel(40,3)">3</button><button class="esc-btn" onclick="sel(40,4)">4</button><button class="esc-btn" onclick="sel(40,5)">5</button></div><span class="esc-lbl r">me describe</span></div></div>
+
+  <button class="btn-calcular" id="btn-calcular" onclick="calcular()">Ver mi factura →</button>
+
+  <div class="resultado-wrap" id="resultado-wrap">
+
+    <div class="factura-header">
+      <div class="factura-label">Tu factura directiva</div>
+      <div class="factura-titulo" id="f-titulo"></div>
+      <div class="factura-sub" id="f-sub"></div>
+      <div class="factura-desc" id="f-desc"></div>
+    </div>
+
+    <div class="cuotas-grid" id="cuotas-grid"></div>
+
+    <div class="grafica-wrap">
+      <div class="grafica-titulo">Costo por dimensión</div>
+      <div style="position:relative;width:100%;height:280px;">
+        <canvas id="grafica" role="img" aria-label="Gráfica de barras con nivel de costo en las cuatro cuotas"></canvas>
+      </div>
+    </div>
+
+    <div class="perfil-funcional" id="perfil-funcional">
+      <div class="pf-tit">Perfil detectado — El directivo funcional</div>
+      <div class="pf-txt">Sigues cumpliendo. Sigues llegando. Sigues tomando decisiones y liderando reuniones. Desde afuera nada indica que hay un problema. Pero tu factura muestra costos significativos en múltiples dimensiones simultáneamente. Este es el perfil más peligroso del ciclo: la capacidad de seguir funcionando impide recibir la señal de alarma que el colapso habría enviado. Churchill lo vivió durante años. El cuerpo siempre cobra, con intereses.</div>
+    </div>
+
+    <div class="cuota-critica-wrap" id="cuota-critica">
+      <div class="cuota-critica-tit" id="cc-tit"></div>
+      <div class="cuota-critica-desc" id="cc-desc"></div>
+    </div>
+
+    <div class="recs-titulo">Qué hacer con esta factura</div>
+    <div class="rec"><div class="rec-cap" id="rec1-cap"></div><div class="rec-txt" id="rec1-txt"></div></div>
+    <div class="rec"><div class="rec-cap" id="rec2-cap"></div><div class="rec-txt" id="rec2-txt"></div></div>
+    <div class="rec"><div class="rec-cap" id="rec3-cap"></div><div class="rec-txt" id="rec3-txt"></div></div>
+    <div class="rec"><div class="rec-cap" id="rec4-cap"></div><div class="rec-txt" id="rec4-txt"></div></div>
+
+    <div class="pregunta-cierre">
+      <p>"¿Qué cuota estás pagando ahora mismo — y desde cuándo?"</p>
+      <span>Capítulo 6 — El último en enterarse</span>
+    </div>
+
+    <div class="caja-acc">
+      <h3>Guarda y comparte tu diagnóstico</h3>
+      <p>Recibe este resultado completo por correo o guárdalo como PDF.</p>
+      <div class="correo-flex">
+        <input type="email" id="correo" placeholder="tu@correo.com">
+        <button class="btn-env" id="btn-env" onclick="enviar()">Enviar →</button>
+      </div>
+      <p class="msg" id="msg-correo"></p>
+      <button class="btn-pdf" onclick="window.print()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+        Guardar como PDF
+      </button>
+    </div>
+
+  </div>
+
+  <div style="background:#1A1A1A;border:2px solid #C9A84C;border-radius:10px;padding:1.5rem 1.75rem;margin-top:1.25rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+    <div>
+      <p style="font-size:14px;color:#C9A84C;font-weight:700;margin-bottom:4px">¡Completaste los 4 tests!</p>
+      <span style="font-size:13px;color:#AAA">Genera ahora tu reporte integrado personalizado con inteligencia artificial</span>
+    </div>
+    <a href="reporte.html" style="background:#C9A84C;color:#111;padding:.85rem 2rem;border-radius:2px;font-family:inherit;font-size:16px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;letter-spacing:.04em">Ver mi reporte →</a>
+  </div>
+
+  <div class="pie">
+    Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com<br>
+    El último en enterarse · Sistema de autodiagnóstico para directivos
+  </div>
+
+</div>
+
+<script>
+emailjs.init('AS4JMWcosY0dk8FBl');
+const R={};
+let miGrafica=null;
+
+function sel(i,v){
+  const card=document.querySelector('[data-i="'+i+'"]');
+  card.querySelectorAll('.esc-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===v));
+  R[i]={v,c:card.getAttribute('data-c')};
+  card.classList.add('ok');
+  const n=Object.keys(R).length;
+  document.getElementById('barra').style.width=Math.round(n/40*100)+'%';
+  document.getElementById('barra-txt').textContent=n+' / 40';
+  document.getElementById('btn-calcular').style.display=n===40?'block':'none';
+}
+
+const CUOTAS={
+  C:{nombre:'Cuerpo',col:'#A32D2D',fondo:'#FCF0F0',txt:'#791F1F'},
+  R:{nombre:'Relaciones',col:'#534AB7',fondo:'#EEEDFE',txt:'#26215C'},
+  D:{nombre:'Rendimiento',col:'#BA7517',fondo:'#FDF3E3',txt:'#633806'},
+  I:{nombre:'Identidad',col:'#1A5EA8',fondo:'#EAF2FB',txt:'#0C447C'}
+};
+
+function nivelTexto(pts){
+  if(pts<=20) return{nivel:'Bajo',col:'#0F6E56',fondo:'#E8F5F0'};
+  if(pts<=30) return{nivel:'Medio',col:'#BA7517',fondo:'#FDF3E3'};
+  if(pts<=40) return{nivel:'Alto',col:'#993C1D',fondo:'#FFF0E8'};
+  return{nivel:'Crítico',col:'#A32D2D',fondo:'#FCF0F0'};
+}
+
+const DESCRIPCIONES_CUOTA={
+  C:{
+    bajo:'Tu cuerpo está aguantando bien el nivel de presión actual. Esto no significa que debas ignorarlo — significa que tienes una ventana de tiempo valiosa para instalar hábitos de recuperación antes de que el depósito empiece a vaciarse.',
+    medio:'Tu cuerpo está mandando señales que llevas tiempo atendiendo a medias. El cansancio que no desaparece con el descanso, la tensión que asumes como normal, los hábitos que han empeorado sin que hayas actuado — todo eso es información. El cuerpo no miente, aunque tardemos en escucharlo.',
+    alto:'La factura del cuerpo está activa y lleva tiempo acumulándose. Selye documentó algo que debería estar en cada sala de espera médica: el cuerpo tiene una capacidad de adaptación al estrés extraordinaria y finita. Cuando esa capacidad se agota, el deterioro es rápido. El cuerpo no avisa del límite con un cartel. Avisa con una crisis.',
+    critico:'Tu cuerpo está pagando el precio más alto del sistema. Esta no es una señal de alarma futura — es una señal presente que requiere atención inmediata. No como debilidad sino como la decisión más inteligente disponible ahora mismo. El directivo que no cuida el instrumento desde el que dirige no está siendo fuerte. Está siendo irresponsable con todo lo que depende de él.'
+  },
+  R:{
+    bajo:'Tus relaciones más importantes mantienen su calidad y su presencia. Esto es más valioso de lo que parece — las relaciones dañadas por el estrés crónico no se reparan con una semana de vacaciones. Que estén bien ahora significa que tienes algo que proteger activamente.',
+    medio:'Algo está cambiando en la calidad de tus relaciones más importantes. Puede que sea gradual, puede que lo atribuyas al ritmo del trabajo. Pero el equipo que filtra lo que te dice, la familia que adapta su comportamiento a tu estado, las conversaciones que se han reducido — todo eso es información relacional que merece atención antes de que el deterioro sea estructural.',
+    alto:'La factura relacional es alta y la particularidad de esta cuota es que no se repara con tiempo libre. Las relaciones dañadas por el estrés crónico requieren algo más difícil que vacaciones: requieren presencia real, conversaciones que se han evitado y decisiones sobre qué priorizar. El general Marshall pagó esta cuota durante años. Su esposa reorganizó su propia vida emocional alrededor del estado de estrés de su marido. Nadie contabilizó ese costo como parte del precio.',
+    critico:'Tu factura relacional está en nivel crítico. Las personas más importantes de tu vida están pagando un precio que probablemente no han verbalizado con claridad pero que está presente en cómo se relacionan contigo. Esta cuota es la más costosa de recuperar. Cada día que pasa sin atenderla consolida patrones que con el tiempo se vuelven estructurales.'
+  },
+  D:{
+    bajo:'Tu rendimiento se mantiene en niveles adecuados. El pensamiento estratégico, la calidad de las decisiones y la capacidad de recuperación están funcionando. Aprovecha este momento para instalar las válvulas del Capítulo 9 antes de necesitarlas.',
+    medio:'Estás notando los primeros efectos del estrés sostenido en tu rendimiento real, aunque desde afuera todo siga pareciendo normal. Kahneman lo documentó con precisión: el agotamiento cognitivo deteriora de forma sistemática el pensamiento analítico y reflexivo mientras el pensamiento rápido e intuitivo sigue funcionando. El resultado es un directivo que confunde actividad con productividad y velocidad con claridad.',
+    alto:'Tu rendimiento real está significativamente por debajo de tu rendimiento aparente. Trabajas más, produces menos, y lo más difícil: desde adentro no se siente como deterioro, se siente como que las circunstancias están siendo especialmente difíciles. Esa es la definición exacta de lo que el Capítulo 1 llama el agua que ya no se percibe.',
+    critico:'La factura de rendimiento en nivel crítico significa que estás tomando decisiones importantes con el cerebro en modo supervivencia. Kahneman demostró que el pensamiento lento y profundo — el que produce las mejores decisiones estratégicas — es el primero en degradarse bajo estrés sostenido. No estás en tu mejor versión directiva. Y las personas que dependen de tus decisiones lo están pagando aunque nadie lo diga.'
+  },
+  I:{
+    bajo:'Tu identidad personal se mantiene diferenciada del cargo. Sabes quién eres fuera de lo que diriges y eso te da una base de estabilidad que pocos directivos con tu nivel de responsabilidad conservan. Es tu activo más valioso — cuídalo activamente.',
+    medio:'Hay señales de que el cargo está ocupando más espacio del que elegirías conscientemente. No es una crisis de identidad — es un proceso gradual que el Capítulo 2 describe con precisión: primero aprendes a modular tus reacciones, luego a no mostrar incertidumbre, luego a no sentirla. El momento de atenderlo es antes de que el proceso complete su ciclo.',
+    alto:'La fusión entre tu identidad y tu cargo está avanzada. La incomodidad ante la calma, la dificultad para recordar quién eras antes, la sensación de que hay una versión de ti que se está perdiendo — todo eso es información que el Capítulo 2 anticipa con precisión. Steve Jobs describió este estado después de salir de Apple con una honestidad poco habitual: no me faltaba trabajo, me faltaba la identidad que el trabajo me daba.',
+    critico:'Tu identidad y tu cargo se han fusionado de una forma que requiere atención urgente. No porque el cargo no importe — sino porque cuando desaparezca, y todos los cargos desaparecen, necesitarás saber qué queda. El Capítulo 2 tiene el mapa de cómo ocurre este proceso. El Capítulo 10 tiene el protocolo para empezar a revertirlo. Pero primero hay que reconocer que está ocurriendo.'
+  }
+};
+
+function calcular(){
+  const ss={C:0,R:0,D:0,I:0};
+  for(const k in R) ss[R[k].c]+=R[k].v;
+
+  const total=ss.C+ss.R+ss.D+ss.I;
+  const maxTotal=200;
+  const pctTotal=Math.round((total/maxTotal)*100);
+
+  // Título general
+  let titulo,sub,desc;
+  const criticas=Object.values(ss).filter(v=>v>=41).length;
+  const altas=Object.values(ss).filter(v=>v>=31).length;
+
+  if(pctTotal<=35){titulo='Factura baja';sub='El estrés no está cobrando de forma significativa todavía';desc='Tu sistema está funcionando bien en las cuatro dimensiones. Esto no significa que el riesgo sea cero — significa que tienes una ventaja enorme: puedes diseñar tus válvulas de recuperación antes de necesitarlas urgentemente. El directivo que previene es el que dura. Usa este momento.';}
+  else if(pctTotal<=55){titulo='Factura en proceso';sub='Algunas cuotas ya están activas, otras en camino';desc='El estrés está empezando a cobrar en dimensiones específicas de tu vida. No es una crisis — es el momento más eficiente para intervenir. El Capítulo 6 lo dice con precisión: el punto de intervención más eficiente está entre el distrés y la factura. Ahí el cambio todavía es relativamente sencillo.';}
+  else if(pctTotal<=75){titulo='Factura alta';sub='El costo ya es significativo en múltiples dimensiones';desc='Llevas tiempo pagando en varias dimensiones simultáneamente. La suma importa tanto como cada cuota individual. El directivo que paga costos altos en cuerpo, relaciones y rendimiento al mismo tiempo no está en una situación de estrés elevado — está en una situación de deuda acumulada que requiere un plan real, no ajustes de agenda.';}
+  else{titulo='Factura crítica';sub='El costo total es muy alto — esto requiere atención inmediata';desc='Tu factura total indica que el estrés lleva tiempo cobrando de forma severa en la mayoría de las dimensiones de tu vida. Jacinda Ardern dijo algo que aplica directamente aquí: ya no tengo suficiente en el tanque para hacer este trabajo como se merece. Reconocer ese límite con honestidad no es rendirse. Es la decisión más inteligente disponible.';}
+
+  document.getElementById('f-titulo').textContent=titulo;
+  document.getElementById('f-sub').textContent=sub+' · Puntuación total: '+total+' / '+maxTotal+' ('+pctTotal+'%)';
+  document.getElementById('f-desc').textContent=desc;
+
+  // Cards por cuota
+  const grid=document.getElementById('cuotas-grid');
+  grid.innerHTML='';
+  const orden=['C','R','D','I'];
+  orden.forEach(k=>{
+    const q=CUOTAS[k];
+    const n=nivelTexto(ss[k]);
+    const pct=Math.round((ss[k]/50)*100);
+    const dKey=n.nivel==='Bajo'?'bajo':n.nivel==='Medio'?'medio':n.nivel==='Alto'?'alto':'critico';
+    const card=document.createElement('div');
+    card.className='cuota-card';
+    card.style.borderTopColor=q.col;
+    card.innerHTML=
+      '<div class="cuota-nombre" style="color:'+q.txt+'">'+q.nombre+'</div>'+
+      '<div class="cuota-puntos" style="color:'+q.col+'">'+ss[k]+' / 50</div>'+
+      '<span class="cuota-nivel" style="background:'+n.fondo+';color:'+n.col+'">'+n.nivel+'</span>'+
+      '<div class="cuota-barra-bg"><div class="cuota-barra-fill" style="width:'+pct+'%;background:'+q.col+'"></div></div>'+
+      '<div class="cuota-desc">'+DESCRIPCIONES_CUOTA[k][dKey]+'</div>';
+    grid.appendChild(card);
+  });
+
+  // Gráfica
+  if(miGrafica) miGrafica.destroy();
+  miGrafica=new Chart(document.getElementById('grafica'),{
+    type:'bar',
+    data:{
+      labels:['Cuerpo','Relaciones','Rendimiento','Identidad'],
+      datasets:[
+        {label:'Tu costo',data:[ss.C,ss.R,ss.D,ss.I],backgroundColor:['#A32D2D','#534AB7','#BA7517','#1A5EA8'],borderRadius:4,barPercentage:.55},
+        {label:'Nivel crítico',data:[41,41,41,41],type:'line',borderColor:'#C9A84C',borderWidth:2,borderDash:[5,4],pointRadius:0,fill:false}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y+' / 50'}}},
+      scales:{
+        y:{min:0,max:50,ticks:{font:{size:12}},grid:{color:'#F0F0EE'}},
+        x:{ticks:{font:{size:12}},grid:{display:false}}
+      }
+    }
+  });
+
+  // Perfil directivo funcional
+  const esFuncional=altas>=3&&pctTotal>=50;
+  if(esFuncional) document.getElementById('perfil-funcional').style.display='block';
+
+  // Cuota más crítica — análisis extendido
+  let maxK='C', maxV=0;
+  for(const k in ss){if(ss[k]>maxV){maxV=ss[k];maxK=k;}}
+  const cc=CUOTAS[maxK];
+  const ccWrap=document.getElementById('cuota-critica');
+  ccWrap.style.borderLeftColor=cc.col;
+  document.getElementById('cc-tit').style.color=cc.txt;
+  document.getElementById('cc-tit').textContent='Tu cuota más activa: '+cc.nombre;
+  const ccDKey=nivelTexto(maxV).nivel==='Bajo'?'bajo':nivelTexto(maxV).nivel==='Medio'?'medio':nivelTexto(maxV).nivel==='Alto'?'alto':'critico';
+  document.getElementById('cc-desc').textContent=DESCRIPCIONES_CUOTA[maxK][ccDKey];
+
+  // Recomendaciones por cuota crítica
+  const RECS={
+    C:{
+      c1:'Capítulo 6 — El cuerpo pone el límite que el directivo no puso',
+      r1:'Selye documentó que el cuerpo tiene una capacidad de adaptación al estrés extraordinaria y finita. Cuando esa capacidad se agota, el deterioro es rápido. El primer ministro Harold Wilson renunció en 1976 a los 60 años porque el cuerpo dijo basta antes de que hubiera razón política para parar. Tu cuerpo ya está diciendo algo. La pregunta es cuándo vas a escucharlo — antes o después de que suba el volumen.',
+      c2:'Capítulo 9 — El cuerpo como válvula',
+      r2:'El cortisol y la adrenalina que genera el estrés sostenido necesitan una salida metabólica. El movimiento físico regular es la forma más directa de metabolizarlos. No hace falta un plan sofisticado: movimiento físico de intensidad moderada durante al menos 30 minutos, al menos tres veces por semana. Roosevelt lo sabía de forma intuitiva. La neurociencia lo confirma hoy. Esta semana no es opcional.',
+      c3:'Esta semana — una revisión médica',
+      r3:'Agenda esta semana la revisión médica que llevas postergando. No como señal de alarma sino como el acto más básico de responsabilidad hacia todo lo que depende de que tú estés bien. El directivo que cuida el instrumento desde el que dirige no está siendo débil. Está siendo estratégico.',
+      c4:'Capítulo 10 — Observar antes de cambiar',
+      r4:'Durante las próximas cuatro semanas registra diariamente en una escala del 1 al 10 tu nivel de energía al terminar el día. No para compararte con otros sino para ver tu propia tendencia. Tres días seguidos con puntuaciones bajas es información que merece atención. Una semana entera es urgente.'
+    },
+    R:{
+      c1:'Capítulo 6 — La factura relacional no se repara con vacaciones',
+      r1:'Las relaciones dañadas por el estrés crónico requieren algo más que tiempo libre: requieren presencia real en conversaciones que se han evitado. El matrimonio del general Marshall durante la Segunda Guerra Mundial está documentado como un ejercicio extraordinario de adaptación por parte de su esposa Katherine. Sus cartas muestran a una mujer que reorganizó su propia vida emocional alrededor del estado de estrés de su marido durante años. Nadie contabilizó ese costo como parte del precio de la guerra. Tú sí puedes contabilizarlo.',
+      c2:'Capítulo 4 — Lo que tu entorno ya sabe y tú no',
+      r2:'La secretaria personal de Churchill desarrolló con el tiempo una habilidad casi infalible para predecir su humor antes de que cruzara la puerta. Churchill nunca fue consciente de lo fácilmente legible que era para las personas que lo rodeaban. Tu equipo y tu familia también te leen. La pregunta es qué están leyendo y si tú lo sabes. Esta semana hazte la pregunta: ¿alguien cercano ha cambiado la forma en que se relaciona conmigo en los últimos tres meses?',
+      c3:'Esta semana — una conversación sin agenda',
+      r3:'Elige a una persona importante de tu vida y ten una conversación donde no resuelvas nada, no corrijas nada y no evalúes nada. Solo estés presente. No como técnica relacional sino como experimento real. Lo que descubras sobre la distancia que se ha instalado vale más que cualquier plan de conciliación.',
+      c4:'Capítulo 9 — La desconexión programada como acto relacional',
+      r4:'La disponibilidad permanente no es presencia — es ocupación del espacio sin habitarlo de verdad. La desconexión programada del Capítulo 9 no es descanso para ti. Es presencia real para las personas que más necesitan que estés ahí de verdad. Defiéndela con la misma energía con la que defiendes una reunión importante.'
+    },
+    D:{
+      c1:'Capítulo 6 — Trabajas más, produces menos, sin verlo',
+      r1:'Kahneman documentó cómo el agotamiento cognitivo deteriora de forma sistemática la calidad del pensamiento analítico y reflexivo. El pensamiento rápido e intuitivo sigue funcionando bajo estrés. El pensamiento lento y profundo se degrada. El resultado es un directivo que confunde actividad con productividad y velocidad con claridad. Si tus decisiones más importantes se toman al final del día o bajo presión sostenida, el costo no es solo tuyo — es de las personas que dependen de esas decisiones.',
+      c2:'Capítulo 9 — El Protocolo de 24 horas para proteger las decisiones',
+      r2:'Cualquier decisión importante tomada en estado de activación emocional alta o agotamiento se pospone 24 horas si la situación lo permite. No es indecisión — es reconocer que el cerebro bajo estrés agudo no tiene acceso completo a su capacidad analítica. Las situaciones que genuinamente no pueden esperar 24 horas son muchas menos de las que el directivo en distrés cree que son.',
+      c3:'Esta semana — identifica tus horas de mejor pensamiento',
+      r3:'Durante una semana observa en qué momento del día tomas tus mejores decisiones. No lo que crees — lo que los datos indican. Luego protege ese tiempo de reuniones, correos y urgencias durante al menos dos semanas. Una hora de pensamiento estratégico en tu mejor momento produce más que cuatro horas de trabajo reactivo en el peor.',
+      c4:'Capítulo 10 — Reducir antes de optimizar',
+      r4:'El directivo con la factura de rendimiento alta casi siempre intenta resolver el problema haciendo más: más planificación, más sistemas, más herramientas. La dirección correcta es la contraria. Identifica esta semana tres compromisos que puedas eliminar o delegar sin consecuencias reales. Lo que queda después de esa reducción es donde está tu verdadero rendimiento.'
+    },
+    I:{
+      c1:'Capítulo 2 — El cargo que te quiere convertir en otra cosa',
+      r1:'La sustitución del yo personal por el yo directivo no ocurre de golpe. Ocurre en pequeños pasos que tomados por separado parecen razonables. Primero aprendes a modular tus reacciones. Luego a no mostrar incertidumbre. Luego te das cuenta de que llevas meses sin una conversación donde alguien te pregunte cómo estás de verdad y donde tú respondas de verdad. En ese punto, sin que nadie lo haya decidido, el cargo ya no es lo que haces. El cargo es lo que eres.',
+      c2:'Capítulo 2 — Lo que el cargo no puede quitarte, si no lo dejas',
+      r2:'El cargo va a presionarte para que seas predecible y funcional. En dosis razonables eso no solo es aceptable, es parte del liderazgo. El límite está en el momento en que ya no recuerdas quién eres cuando no estás dirigiendo. Ese momento no es inevitable. Es evitable. Pero hay que elegirlo activamente porque el sistema por defecto va en la dirección contraria.',
+      c3:'Esta semana — recuperar una cosa',
+      r3:'Identifica una cosa que hacías o eras antes del cargo que hoy casi no reconoces en ti. No para lamentarla — para decidir si quieres recuperarla. Elige la más pequeña y más fácil de recuperar. No la más importante. La recuperación de la identidad funciona como los hábitos: el éxito pequeño sostenido produce transformaciones más profundas que el cambio grande y esporádico.',
+      c4:'Capítulo 7 — Verificar si estás describiendo quién eres o justificando en quién te has convertido',
+      r4:'Hay una pregunta del Capítulo 7 que aplica directamente a esta cuota: ¿estás describiendo quién eres o justificando en quién te has convertido? Los rasgos de carácter son difíciles de cambiar y no necesariamente hay que cambiarlos. Los patrones de respuesta al estrés son modificables si se identifican como lo que son. Mientras los describes como personalidad, el sistema no puede cambiar. Cuando los ves como historia acumulada, la salida existe.'
+    }
+  };
+
+  const rv=RECS[maxK];
+  document.getElementById('rec1-cap').textContent=rv.c1;document.getElementById('rec1-txt').textContent=rv.r1;
+  document.getElementById('rec2-cap').textContent=rv.c2;document.getElementById('rec2-txt').textContent=rv.r2;
+  document.getElementById('rec3-cap').textContent=rv.c3;document.getElementById('rec3-txt').textContent=rv.r3;
+  document.getElementById('rec4-cap').textContent=rv.c4;document.getElementById('rec4-txt').textContent=rv.r4;
+
+  window._r={ss,total,pctTotal,titulo,desc,maxK,esFuncional};
+  // Guardar en localStorage
+  try {
+    const NOMS_G={C:'Cuerpo',R:'Relaciones',D:'Rendimiento',I:'Identidad'};
+    function getNivel(pts){ if(pts<=20)return'Bajo'; if(pts<=30)return'Medio'; if(pts<=40)return'Alto'; return'Crítico'; }
+    const datosT4 = {
+      titulo: titulo,
+      descripcion: desc,
+      puntuacion: total,
+      maximo: 200,
+      porcentaje: pctTotal,
+      cuotaMasCritica: NOMS_G[maxK],
+      esFuncional: esFuncional,
+      cuerpo: ss.C, cuerpoNivel: getNivel(ss.C),
+      relaciones: ss.R, relacionesNivel: getNivel(ss.R),
+      rendimiento: ss.D, rendimientoNivel: getNivel(ss.D),
+      identidad: ss.I, identidadNivel: getNivel(ss.I),
+      fecha: new Date().toLocaleDateString('es-MX')
+    };
+    localStorage.setItem('test4_resultado', JSON.stringify(datosT4));
+    localStorage.setItem('test4_visitado','1');
+    console.log('Test 4 guardado OK:', datosT4.titulo, datosT4.puntuacion);
+  } catch(e) {
+    console.error('Error guardando test4:', e);
+  }
+  document.getElementById('btn-calcular').style.display='none';
+  document.getElementById('resultado-wrap').style.display='block';
+  document.getElementById('resultado-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function enviar(){
+  const correo=document.getElementById('correo').value.trim();
+  const nombre=document.getElementById('nombre').value.trim()||'Directivo';
+  const cargo=document.getElementById('cargo').value.trim();
+  const org=document.getElementById('org').value.trim();
+  const msg=document.getElementById('msg-correo');
+  const btn=document.getElementById('btn-env');
+  if(!correo||!correo.includes('@')){msg.textContent='Escribe un correo válido.';msg.className='msg err';return;}
+  const r=window._r;if(!r) return;
+  btn.disabled=true;btn.textContent='Enviando...';msg.textContent='';
+  const NOMS={C:'Cuerpo',R:'Relaciones',D:'Rendimiento',I:'Identidad'};
+  const niveles={C:nivelTexto(r.ss.C).nivel,R:nivelTexto(r.ss.R).nivel,D:nivelTexto(r.ss.D).nivel,I:nivelTexto(r.ss.I).nivel};
+  const texto=
+    'TU FACTURA DIRECTIVA: '+r.titulo+'\n'+
+    'Puntuación total: '+r.total+' / 200 ('+r.pctTotal+'%)\n\n'+
+    r.desc+'\n\n'+
+    '━━━ COSTO POR CUOTA ━━━\n'+
+    'Cuerpo: '+r.ss.C+' / 50 ('+niveles.C+')\n'+
+    'Relaciones: '+r.ss.R+' / 50 ('+niveles.R+')\n'+
+    'Rendimiento: '+r.ss.D+' / 50 ('+niveles.D+')\n'+
+    'Identidad: '+r.ss.I+' / 50 ('+niveles.I+')\n\n'+
+    (r.esFuncional?'PERFIL DETECTADO: El directivo funcional.\nSigues cumpliendo. Sigues llegando. Pero la factura se acumula en silencio. Lee el Capítulo 6.\n\n':'')+
+    '━━━ CUOTA MÁS ACTIVA: '+NOMS[r.maxK]+' ━━━\n'+
+    document.getElementById('cc-desc').textContent+'\n\n'+
+    '━━━ QUÉ HACER ━━━\n\n'+
+    document.getElementById('rec1-cap').textContent+'\n'+document.getElementById('rec1-txt').textContent+'\n\n'+
+    document.getElementById('rec2-cap').textContent+'\n'+document.getElementById('rec2-txt').textContent+'\n\n'+
+    document.getElementById('rec3-cap').textContent+'\n'+document.getElementById('rec3-txt').textContent+'\n\n'+
+    document.getElementById('rec4-cap').textContent+'\n'+document.getElementById('rec4-txt').textContent+'\n\n'+
+    '━━━━━━━━━━━━━━━━━━━━━━━\n'+
+    '"¿Qué cuota estás pagando ahora mismo — y desde cuándo?"\n'+
+    'Capítulo 6 — El último en enterarse\n\n'+
+    'Para guardar en PDF entra a estres.ciemx.com y usa el botón "Guardar como PDF".\n\n'+
+    'Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com';
+  emailjs.send('service_j8od1sk','template_2h2t21c',{
+    nombre,cargo,organizacion:org,
+    puntuacion:r.total+' / 200 ('+r.pctTotal+'%)',
+    perfil:r.titulo,
+    resultado:texto,
+    to_email:correo
+  }).then(()=>{
+    msg.textContent='✓ Tu diagnóstico fue enviado a '+correo;msg.className='msg ok';
+    btn.textContent='Enviado ✓';
+  }).catch(()=>{
+    msg.textContent='Error al enviar. Verifica el correo e intenta de nuevo.';msg.className='msg err';
+    btn.disabled=false;btn.textContent='Enviar →';
+  });
+}
+</script>
+</body>
+</html>

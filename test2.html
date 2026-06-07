@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test 2 — ¿Cuál es tu mecha? | El último en enterarse</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --azul:#1A5EA8;--azul-c:#EAF2FB;--azul-t:#0C447C;
+  --naranja:#BA7517;--naranja-c:#FDF3E3;--naranja-t:#633806;
+  --coral:#993C1D;--coral-c:#FFF0E8;--coral-t:#712B13;
+  --purpura:#534AB7;--purpura-c:#EEEDFE;--purpura-t:#26215C;
+  --verde:#0F6E56;--verde-c:#E8F5F0;
+  --borde:#E0E0DC;--gris:#F5F5F3;--texto:#222;--muted:#666;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F2F0EB;color:var(--texto);min-height:100vh}
+.encabezado{background:#1A1A1A;color:#C9A84C;padding:2rem 1.5rem 1.5rem;text-align:center;border-bottom:3px solid #C9A84C}
+.encabezado .serie{font-size:12px;letter-spacing:.1em;opacity:.75;margin-bottom:6px;text-transform:uppercase;color:#C9A84C}
+.encabezado h1{font-size:24px;font-weight:700;margin-bottom:6px;line-height:1.3;color:white}
+.encabezado p{font-size:14px;opacity:.85;color:#C9A84C}
+.contenedor{max-width:740px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.caja-intro{background:white;border:1px solid var(--borde);border-left:4px solid #C9A84C;border-radius:0 10px 10px 0;padding:1.25rem 1.5rem;margin-bottom:1.75rem}
+.caja-intro p{font-size:15px;line-height:1.7;color:#333}
+.datos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.75rem}
+.datos-grid .full{grid-column:1/-1}
+.campo label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.campo input{width:100%;padding:10px 14px;border:1px solid var(--borde);border-radius:8px;font-size:15px;color:var(--texto);background:white;transition:border .2s}
+.campo input:focus{outline:none;border-color:#C9A84C}
+.barra-wrap{display:flex;align-items:center;gap:12px;margin:1.5rem 0;background:white;border:1px solid var(--borde);border-radius:10px;padding:.85rem 1.25rem;position:sticky;top:0;z-index:10}
+.barra-bg{flex:1;height:6px;background:#EEE;border-radius:3px}
+.barra-fill{height:6px;background:#C9A84C;border-radius:3px;transition:width .3s;width:0%}
+.barra-txt{font-size:13px;color:#999;min-width:55px;text-align:right}
+.item{background:white;border:1px solid var(--borde);border-radius:10px;padding:1.1rem 1.25rem;margin-bottom:10px;transition:border-color .2s}
+.item.ok{border-color:#C9A84C;border-left:3px solid #C9A84C}
+.item-txt{font-size:15px;line-height:1.6;color:#222;margin-bottom:.9rem}
+.esc-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.esc-lbl{font-size:12px;color:#999;min-width:72px}
+.esc-lbl.r{text-align:right}
+.esc-btns{display:flex;gap:6px;flex:1;justify-content:center}
+.esc-btn{width:40px;height:40px;border-radius:8px;border:1px solid var(--borde);background:white;font-size:14px;font-weight:600;color:#888;cursor:pointer;transition:all .15s}
+.esc-btn:hover{background:#F5EDD6;border-color:#C9A84C;color:#8B6914}
+.esc-btn.sel{background:#1A1A1A;border-color:#C9A84C;color:#C9A84C}
+.btn-calcular{display:none;width:100%;padding:14px;background:#1A1A1A;color:#C9A84C;border:2px solid #C9A84C;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:1.5rem;letter-spacing:.04em;transition:all .2s}
+.btn-calcular:hover{background:#C9A84C;color:#1A1A1A}
+.resultado-wrap{display:none;margin-top:1.5rem}
+.res-header{border-radius:0 12px 12px 0;padding:1.75rem;margin-bottom:1.25rem;border-left:6px solid}
+.res-tipologia{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.res-nombre{font-size:38px;font-weight:700;margin-bottom:4px}
+.res-combo{font-size:14px;font-weight:600;margin-bottom:14px}
+.res-desc{font-size:15px;line-height:1.8}
+.metricas{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.metrica{background:var(--gris);border-radius:8px;padding:.85rem;text-align:center}
+.metrica-lbl{font-size:11px;color:#888;margin-bottom:4px}
+.metrica-val{font-size:17px;font-weight:700;color:var(--texto)}
+.grafica-wrap{background:white;border:1px solid var(--borde);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.grafica-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:1rem}
+.senales-wrap{background:white;border:1px solid var(--borde);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.senales-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:.85rem}
+.senales-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.senal{border-radius:8px;padding:.85rem}
+.senal-tipo{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.senal-txt{font-size:13px;line-height:1.5;color:#333}
+.recs-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:.75rem}
+.rec{background:white;border:1px solid var(--borde);border-left:4px solid;border-radius:0 10px 10px 0;padding:1.1rem 1.25rem;margin-bottom:10px}
+.rec-cap{font-size:13px;font-weight:700;margin-bottom:6px}
+.rec-txt{font-size:14px;line-height:1.75;color:#333}
+.caja-acc{background:white;border:1px solid var(--borde);border-radius:12px;padding:1.25rem 1.5rem;margin-top:1.25rem}
+.caja-acc h3{font-size:15px;font-weight:700;color:#333;margin-bottom:4px}
+.caja-acc p{font-size:14px;color:#666;margin-bottom:.75rem}
+.correo-flex{display:flex;gap:8px;margin-bottom:8px}
+.correo-flex input{flex:1;padding:10px 14px;border:1px solid var(--borde);border-radius:8px;font-size:15px}
+.correo-flex input:focus{outline:none;border-color:var(--azul)}
+.btn-env{padding:10px 18px;background:#1A1A1A;color:#C9A84C;border:1px solid #C9A84C;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s}
+.btn-env:hover{background:#C9A84C;color:#1A1A1A}
+.btn-env:disabled{background:#aaa;cursor:not-allowed}
+.btn-pdf{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:var(--gris);color:#444;border:1px solid var(--borde);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}
+.btn-pdf:hover{background:#EAEAE7}
+.msg{font-size:14px;margin-top:6px}
+.msg.ok{color:var(--verde)}
+.msg.err{color:var(--coral)}
+.sig-test{background:#1A1A1A;border:1px solid #C9A84C;border-radius:10px;padding:1.1rem 1.5rem;margin-top:1.25rem}
+.sig-test p{font-size:14px;color:#C9A84C;font-weight:700;margin-bottom:2px}
+.sig-test span{font-size:13px;color:#AAA}
+.pie{text-align:center;font-size:13px;color:#aaa;margin-top:3rem;padding-bottom:1rem}
+@media(max-width:500px){
+  .datos-grid{grid-template-columns:1fr}
+  .datos-grid .full{grid-column:1}
+  .metricas{grid-template-columns:1fr 1fr}
+  .senales-grid{grid-template-columns:1fr}
+  .esc-lbl{display:none}
+}
+@media print{
+  body{background:white!important}
+  .encabezado{background:var(--azul)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .barra-wrap,.btn-calcular,.caja-acc,.sig-test,.pie{display:none!important}
+  .item{break-inside:avoid}
+  .resultado-wrap{display:block!important}
+  .rec,.grafica-wrap,.senales-wrap,.res-header,.metricas{break-inside:avoid}
+  .contenedor{padding:.5rem}
+  @page{margin:1.5cm}
+}
+</style>
+</head>
+<body>
+
+<div class="encabezado">
+  <div class="serie">El último en enterarse · Sistema de autodiagnóstico para directivos</div>
+  <h1>Test 2 — ¿Cuál es tu mecha?</h1>
+  <p>20 preguntas · 10 minutos · identifica tu detonador y tu tipología</p>
+</div>
+
+<div class="contenedor">
+
+  <div class="caja-intro">
+    <p>Este test identifica tu patrón específico de reacción bajo presión. No hay respuestas correctas ni incorrectas — solo patrones más o menos reconocibles.<br><br>
+    Responde pensando en cómo reaccionas habitualmente, no como te gustaría reaccionar.<br><br>
+    <strong>1 = casi nunca &nbsp;·&nbsp; 2 = pocas veces &nbsp;·&nbsp; 3 = a veces &nbsp;·&nbsp; 4 = frecuentemente &nbsp;·&nbsp; 5 = casi siempre</strong></p>
+  </div>
+
+  <div class="datos-grid">
+    <div class="campo full"><label for="nombre">Nombre completo</label><input type="text" id="nombre" placeholder="Tu nombre"></div>
+    <div class="campo"><label for="cargo">Cargo</label><input type="text" id="cargo" placeholder="Director, Rector, Gerente..."></div>
+    <div class="campo"><label for="org">Organización</label><input type="text" id="org" placeholder="Tu institución"></div>
+  </div>
+
+  <div class="barra-wrap">
+    <div class="barra-bg"><div class="barra-fill" id="barra"></div></div>
+    <span class="barra-txt" id="barra-txt">0 / 20</span>
+  </div>
+
+  <div class="item" data-i="1" data-m="C"><p class="item-txt">Cuando algo no sale como lo planeé, me cuesta trabajo soltarlo y seguir adelante.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(1,1)">1</button><button class="esc-btn" onclick="sel(1,2)">2</button><button class="esc-btn" onclick="sel(1,3)">3</button><button class="esc-btn" onclick="sel(1,4)">4</button><button class="esc-btn" onclick="sel(1,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="2" data-m="R"><p class="item-txt">Cuando hago un esfuerzo grande y nadie lo menciona, siento una frustración que me cuesta disimular.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(2,1)">1</button><button class="esc-btn" onclick="sel(2,2)">2</button><button class="esc-btn" onclick="sel(2,3)">3</button><button class="esc-btn" onclick="sel(2,4)">4</button><button class="esc-btn" onclick="sel(2,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="3" data-m="L"><p class="item-txt">Cuando alguien no cumple lo que prometió, reacciono con una intensidad que va más allá de la situación concreta.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(3,1)">1</button><button class="esc-btn" onclick="sel(3,2)">2</button><button class="esc-btn" onclick="sel(3,3)">3</button><button class="esc-btn" onclick="sel(3,4)">4</button><button class="esc-btn" onclick="sel(3,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="4" data-m="LI"><p class="item-txt">Cuando alguien invade mi tiempo o mis decisiones sin permiso, exploto antes de haber puesto un límite claro.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(4,1)">1</button><button class="esc-btn" onclick="sel(4,2)">2</button><button class="esc-btn" onclick="sel(4,3)">3</button><button class="esc-btn" onclick="sel(4,4)">4</button><button class="esc-btn" onclick="sel(4,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="5" data-m="C"><p class="item-txt">Necesito saber cómo va todo lo que está bajo mi responsabilidad, aunque otros lo estén manejando.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(5,1)">1</button><button class="esc-btn" onclick="sel(5,2)">2</button><button class="esc-btn" onclick="sel(5,3)">3</button><button class="esc-btn" onclick="sel(5,4)">4</button><button class="esc-btn" onclick="sel(5,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="6" data-m="R"><p class="item-txt">Me afecta más de lo que quisiera cuando mis superiores o el equipo no valoran lo que aporto.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(6,1)">1</button><button class="esc-btn" onclick="sel(6,2)">2</button><button class="esc-btn" onclick="sel(6,3)">3</button><button class="esc-btn" onclick="sel(6,4)">4</button><button class="esc-btn" onclick="sel(6,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="7" data-m="L"><p class="item-txt">Interpreto rápido si alguien está de mi lado o no, y esa lectura cambia cómo me relaciono con esa persona.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(7,1)">1</button><button class="esc-btn" onclick="sel(7,2)">2</button><button class="esc-btn" onclick="sel(7,3)">3</button><button class="esc-btn" onclick="sel(7,4)">4</button><button class="esc-btn" onclick="sel(7,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="8" data-m="LI"><p class="item-txt">Aguanto mucho tiempo sin decir nada y luego reacciono con una fuerza que sorprende a los demás.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(8,1)">1</button><button class="esc-btn" onclick="sel(8,2)">2</button><button class="esc-btn" onclick="sel(8,3)">3</button><button class="esc-btn" onclick="sel(8,4)">4</button><button class="esc-btn" onclick="sel(8,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="9" data-m="C"><p class="item-txt">Cuando delego algo y no se hace como yo lo haría, me cuesta no intervenir o rehacer el trabajo.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(9,1)">1</button><button class="esc-btn" onclick="sel(9,2)">2</button><button class="esc-btn" onclick="sel(9,3)">3</button><button class="esc-btn" onclick="sel(9,4)">4</button><button class="esc-btn" onclick="sel(9,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="10" data-m="R"><p class="item-txt">Recuerdo con claridad las veces que mi trabajo no fue reconocido y eso me sigue afectando.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(10,1)">1</button><button class="esc-btn" onclick="sel(10,2)">2</button><button class="esc-btn" onclick="sel(10,3)">3</button><button class="esc-btn" onclick="sel(10,4)">4</button><button class="esc-btn" onclick="sel(10,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="11" data-m="L"><p class="item-txt">Cuando percibo que alguien actuó a mis espaldas, aunque sea algo menor, me cuesta recuperar la confianza.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(11,1)">1</button><button class="esc-btn" onclick="sel(11,2)">2</button><button class="esc-btn" onclick="sel(11,3)">3</button><button class="esc-btn" onclick="sel(11,4)">4</button><button class="esc-btn" onclick="sel(11,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="12" data-m="LI"><p class="item-txt">Tengo dificultad para decir que no antes de llegar al límite, y cuando llego exploto o me retiro abruptamente.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(12,1)">1</button><button class="esc-btn" onclick="sel(12,2)">2</button><button class="esc-btn" onclick="sel(12,3)">3</button><button class="esc-btn" onclick="sel(12,4)">4</button><button class="esc-btn" onclick="sel(12,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="13" data-m="C"><p class="item-txt">Los errores ajenos me generan una tensión desproporcionada, especialmente cuando afectan resultados que yo superviso.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(13,1)">1</button><button class="esc-btn" onclick="sel(13,2)">2</button><button class="esc-btn" onclick="sel(13,3)">3</button><button class="esc-btn" onclick="sel(13,4)">4</button><button class="esc-btn" onclick="sel(13,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="14" data-m="R"><p class="item-txt">Trabajo mejor cuando siento que lo que hago importa y es visto. Sin eso pierdo motivación rápidamente.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(14,1)">1</button><button class="esc-btn" onclick="sel(14,2)">2</button><button class="esc-btn" onclick="sel(14,3)">3</button><button class="esc-btn" onclick="sel(14,4)">4</button><button class="esc-btn" onclick="sel(14,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="15" data-m="L"><p class="item-txt">Cuando alguien que estimo actúa diferente a lo que esperaba, lo vivo como una traición aunque quizás no lo sea.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(15,1)">1</button><button class="esc-btn" onclick="sel(15,2)">2</button><button class="esc-btn" onclick="sel(15,3)">3</button><button class="esc-btn" onclick="sel(15,4)">4</button><button class="esc-btn" onclick="sel(15,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="16" data-m="LI"><p class="item-txt">Las personas de mi entorno han aprendido hasta dónde pueden llegar conmigo, no porque yo lo haya dicho sino porque reaccioné.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(16,1)">1</button><button class="esc-btn" onclick="sel(16,2)">2</button><button class="esc-btn" onclick="sel(16,3)">3</button><button class="esc-btn" onclick="sel(16,4)">4</button><button class="esc-btn" onclick="sel(16,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="17" data-m="C"><p class="item-txt">Me genera ansiedad real dejar cosas sin resolver o sin supervisar, aunque racionalmente sepa que están en buenas manos.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(17,1)">1</button><button class="esc-btn" onclick="sel(17,2)">2</button><button class="esc-btn" onclick="sel(17,3)">3</button><button class="esc-btn" onclick="sel(17,4)">4</button><button class="esc-btn" onclick="sel(17,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="18" data-m="R"><p class="item-txt">Cuando comparo mi esfuerzo con el reconocimiento que recibo, siento que el balance no es justo.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(18,1)">1</button><button class="esc-btn" onclick="sel(18,2)">2</button><button class="esc-btn" onclick="sel(18,3)">3</button><button class="esc-btn" onclick="sel(18,4)">4</button><button class="esc-btn" onclick="sel(18,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="19" data-m="L"><p class="item-txt">Tengo un grupo pequeño de personas en las que confío plenamente y me cuesta mucho ampliar ese círculo.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(19,1)">1</button><button class="esc-btn" onclick="sel(19,2)">2</button><button class="esc-btn" onclick="sel(19,3)">3</button><button class="esc-btn" onclick="sel(19,4)">4</button><button class="esc-btn" onclick="sel(19,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <div class="item" data-i="20" data-m="LI"><p class="item-txt">Cuando alguien cruza una línea que nunca expresé en voz alta, reacciono como si la hubieran cruzado conscientemente.</p><div class="esc-wrap"><span class="esc-lbl">casi nunca</span><div class="esc-btns"><button class="esc-btn" onclick="sel(20,1)">1</button><button class="esc-btn" onclick="sel(20,2)">2</button><button class="esc-btn" onclick="sel(20,3)">3</button><button class="esc-btn" onclick="sel(20,4)">4</button><button class="esc-btn" onclick="sel(20,5)">5</button></div><span class="esc-lbl r">casi siempre</span></div></div>
+
+  <button class="btn-calcular" id="btn-calcular" onclick="calcular()">Ver mi resultado →</button>
+
+  <div class="resultado-wrap" id="resultado-wrap">
+
+    <div class="res-header" id="res-header">
+      <div class="res-tipologia" id="res-tip"></div>
+      <div class="res-nombre" id="res-nombre"></div>
+      <div class="res-combo" id="res-combo"></div>
+      <div class="res-desc" id="res-desc"></div>
+    </div>
+
+    <div class="metricas">
+      <div class="metrica"><div class="metrica-lbl">Control</div><div class="metrica-val" id="m-c"></div></div>
+      <div class="metrica"><div class="metrica-lbl">Reconocimiento</div><div class="metrica-val" id="m-r"></div></div>
+      <div class="metrica"><div class="metrica-lbl">Lealtad</div><div class="metrica-val" id="m-l"></div></div>
+      <div class="metrica"><div class="metrica-lbl">Límites</div><div class="metrica-val" id="m-li"></div></div>
+    </div>
+
+    <div class="grafica-wrap">
+      <div class="grafica-titulo">Intensidad de cada mecha</div>
+      <div style="position:relative;width:100%;height:260px;">
+        <canvas id="grafica" role="img" aria-label="Gráfica de barras con intensidad de las cuatro mechas"></canvas>
+      </div>
+    </div>
+
+    <div class="senales-wrap">
+      <div class="senales-titulo">Señales previas al estallido — aprende a reconocerlas</div>
+      <div class="senales-grid">
+        <div class="senal" id="s-fisica">
+          <div class="senal-tipo">Física</div>
+          <div class="senal-txt" id="s-fisica-txt"></div>
+        </div>
+        <div class="senal" id="s-emocional">
+          <div class="senal-tipo">Emocional</div>
+          <div class="senal-txt" id="s-emocional-txt"></div>
+        </div>
+        <div class="senal" id="s-conductual">
+          <div class="senal-tipo">Conductual</div>
+          <div class="senal-txt" id="s-conductual-txt"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="recs-titulo">Qué hacer con esto</div>
+    <div class="rec" id="rec1"><div class="rec-cap" id="rec1-cap"></div><div class="rec-txt" id="rec1-txt"></div></div>
+    <div class="rec" id="rec2"><div class="rec-cap" id="rec2-cap"></div><div class="rec-txt" id="rec2-txt"></div></div>
+    <div class="rec" id="rec3"><div class="rec-cap" id="rec3-cap"></div><div class="rec-txt" id="rec3-txt"></div></div>
+
+    <div class="caja-acc">
+      <h3>Guarda y comparte tu diagnóstico</h3>
+      <p>Recibe este resultado completo por correo o guárdalo como PDF.</p>
+      <div class="correo-flex">
+        <input type="email" id="correo" placeholder="tu@correo.com">
+        <button class="btn-env" id="btn-env" onclick="enviar()">Enviar →</button>
+      </div>
+      <p class="msg" id="msg-correo"></p>
+      <button class="btn-pdf" onclick="window.print()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+        Guardar como PDF
+      </button>
+    </div>
+
+    <div class="sig-test" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div>
+        <p>Continúa tu diagnóstico completo</p>
+        <span>Test 3 — ¿En qué zona estás operando? · identifica dónde vive el problema</span>
+      </div>
+      <a href="test3.html" style="background:#C9A84C;color:#111;padding:.7rem 1.5rem;border-radius:2px;font-family:inherit;font-size:15px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">Siguiente test →</a>
+    </div>
+
+  </div>
+
+  <div class="pie">
+    Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com<br>
+    El último en enterarse · Sistema de autodiagnóstico para directivos
+  </div>
+
+</div>
+
+<script>
+emailjs.init('AS4JMWcosY0dk8FBl');
+const R={};
+let miGrafica=null;
+
+function sel(i,v){
+  const card=document.querySelector('[data-i="'+i+'"]');
+  card.querySelectorAll('.esc-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===v));
+  R[i]={v,m:card.getAttribute('data-m')};
+  card.classList.add('ok');
+  const n=Object.keys(R).length;
+  document.getElementById('barra').style.width=Math.round(n/20*100)+'%';
+  document.getElementById('barra-txt').textContent=n+' / 20';
+  document.getElementById('btn-calcular').style.display=n===20?'block':'none';
+}
+
+const PERFILES={
+  'C-R':{nombre:'El Perfecto',combo:'Control + Reconocimiento',
+    desc:'Construyes con precisión y necesitas que se vea. Explota cuando el trabajo impecable pasa desapercibido. Tu mayor miedo no es el caos sino la invisibilidad — que todo ese esfuerzo no cuente. La combinación de ambas mechas crea un ciclo muy específico: cuando no tienes control te angustias, y cuando sí lo tienes pero nadie lo nota, te frustras. El resultado es un directivo que trabaja más que nadie y siente que recibe menos que nadie.',
+    sf:'Tensión en cuello y hombros, mandíbula apretada, respiración contenida antes de hablar.',
+    se:'Frustración difusa que no sabes nombrar, sensación de injusticia, urgencia de corregir.',
+    sc:'Revisas el trabajo de otros sin decirlo, hablas más rápido, reduces el contacto visual.',
+    c1:'Capítulo 8 — La causa raíz del Perfecto',r1:'Tu control no viene del perfeccionismo sino del miedo a que las cosas fallen bajo tu responsabilidad. Y tu necesidad de reconocimiento no es vanidad sino el termómetro con el que mides si tu esfuerzo tiene sentido. Entender la causa raíz cambia completamente la forma en que trabajas con el patrón. No se trata de exigirte menos — se trata de desconectar tu valía del resultado visible.',
+    c2:'Capítulo 9 — El Ancla como primera herramienta',r2:'Antes de revisar o corregir algo que alguien del equipo ya hizo, aplica El Ancla: tres respiraciones y una pregunta — ¿estoy interviniendo porque es necesario o porque no vieron lo que yo vería? Esa pausa no detiene tu exigencia. La dirige. Y le devuelve al equipo la seguridad psicológica que Amy Edmondson demostró que es el predictor más potente del rendimiento colectivo.',
+    c3:'Esta semana — una conversación sin agenda',r3:'Elige a alguien de tu equipo y ten una conversación donde no corrijas, no supervises y no evalúes. Solo escucha. No como técnica de gestión sino como experimento personal. Lo que descubras sobre cómo te ven cuando no están en modo evaluación vale más que cualquier encuesta de clima.'},
+  'C-L':{nombre:'El Blindado',combo:'Control + Lealtad',
+    desc:'Construyes tu mundo con orden y desconfías de quien no lo respeta. Exiges precisión y exiges lealtad — y cuando alguna de las dos falla, la reacción es intensa y difícil de prever. Tu fortaleza real es que nadie trabaja con más consistencia ni protege mejor a los suyos. Tu punto ciego es que ese mismo sistema de protección puede aislar a las personas que más necesitas cerca.',
+    sf:'Rigidez en espalda y cuello, ceño fruncido sostenido, voz que baja de tono antes de explotar.',
+    se:'Sensación de traición mezclada con rabia fría, necesidad de poner orden inmediatamente.',
+    sc:'Te cierras, reduces la comunicación, tomas decisiones solo sin consultar.',
+    c1:'Capítulo 8 — El precio del blindaje',r1:'El Blindado construye su fortaleza como respuesta a experiencias donde el desorden o la deslealtad tuvieron consecuencias reales. No es un defecto de carácter — es un sistema de protección que funcionó y que con el tiempo se automatizó. El problema no es el blindaje sino cuándo se activa: cuando amenazas reales y amenazas percibidas producen la misma respuesta, el sistema empieza a protegerte de personas que no representan peligro.',
+    c2:'Capítulo 4 — Las tres capas de ceguera',r2:'El Blindado tiene una ceguera específica: cuanto más arriba está, menos retroalimentación honesta recibe — no porque la gente no lo vea sino porque nadie quiere pagar el precio de decirle la verdad. Haz la pregunta más incómoda del libro: elige a una persona de confianza real y pídele que te diga qué cambias cuando estás al límite. Lo que obtengas es información que ningún sistema de control puede darte.',
+    c3:'Capítulo 9 — El Protocolo de 24 horas',r3:'Cuando percibas deslealtad o desorden, activa el Protocolo de 24 horas antes de responder. No porque tu lectura sea incorrecta — puede ser perfectamente acertada — sino porque la respuesta en caliente del Blindado tiende a ser permanente cuando podría ser temporal. Una decisión tomada con 24 horas de distancia tiene acceso a más información y produce menos daño colateral.'},
+  'C-LI':{nombre:'El Volcán',combo:'Control + Límites',
+    desc:'Aguantas, organizas, supervisas — hasta que algo se sale del guión. No avisas. Acumulas en silencio y explota cuando el desorden supera tu umbral. Los demás nunca saben cuándo llegará la erupción porque tú tampoco lo sabes con precisión. La combinación de control y límites crea el patrón más impredecible de los seis: todo parece estable hasta que de repente no lo está.',
+    sf:'Calor en el pecho, tensión que sube desde el estómago, necesidad de salir del espacio.',
+    se:'Irritabilidad difusa que no tiene nombre claro, sensación de que todo está mal sin poder decir qué.',
+    sc:'Silencio prolongado seguido de reacción intensa, movimientos más bruscos, interrupciones abruptas.',
+    c1:'Capítulo 8 — Por qué el Volcán no avisa',r1:'El Volcán no explota porque quiera explotar. Explota porque acumula sin soltar y no tiene protocolo de descarga preventiva. Cada límite no puesto es presión que se queda dentro. Cada situación de descontrol no expresada suma al depósito. La buena noticia es que el patrón tiene una solución muy específica: no hacer la acumulación más soportable sino reducirla activamente antes de que llegue al umbral.',
+    c2:'Capítulo 9 — El ritual de cierre diario como válvula preventiva',r2:'El Volcán necesita una válvula que funcione en frío, antes de la erupción. El ritual de cierre diario del Capítulo 9 — cinco minutos al final de cada jornada para identificar qué funcionó, qué cambiarías y qué sueltas esta noche — es exactamente eso. No es meditación ni autoayuda. Es mantenimiento preventivo del depósito. El Volcán que practica esto en frío reduce dramáticamente la frecuencia y la intensidad de sus erupciones.',
+    c3:'Esta semana — pon un límite antes de necesitarlo',r3:'Identifica una situación recurrente donde normalmente aguantas hasta explotar. Esta semana, pon el límite antes de llegar al umbral. No en caliente — en frío, con una frase simple y sin explicaciones excesivas. El objetivo no es la perfección sino la experiencia de que poner límites antes de explotar es posible y produce menos daño que esperar al límite.'},
+  'R-L':{nombre:'El Herido',combo:'Reconocimiento + Lealtad',
+    desc:'Lideras con entrega total y esperas reciprocidad. Cuando no llega el reconocimiento o percibes deslealtad, lo vives como abandono. Tu reacción no es rabia fría sino dolor convertido en distancia. Eres el directivo que más da y el que más sufre en silencio cuando siente que ese dar no fue visto ni correspondido. La combinación crea vínculos muy intensos con las personas que sí reconocen tu entrega — y distancia permanente con quienes no lo hacen.',
+    sf:'Nudo en el pecho, cansancio emocional sostenido, sensación de peso sin causa física clara.',
+    se:'Dolor que se convierte en frialdad, sensación de injusticia profunda, tristeza que no comparte.',
+    sc:'Se retira sin explicar, deja de ofrecer lo que antes daba, respuestas más cortas y formales.',
+    c1:'Capítulo 8 — La causa raíz del Herido',r1:'El Herido no busca validación superficial — busca confirmación de que su entrega tiene sentido. Esa búsqueda no es debilidad sino el motor de su liderazgo. El problema aparece cuando ese motor depende exclusivamente de señales externas para saber si está yendo bien. Viktor Frankl documentó algo que aplica directamente aquí: el sentido que depende de la respuesta de otros es frágil. El sentido que viene de adentro es resistente al entorno.',
+    c2:'Capítulo 2 — Recuperar lo que el cargo no puede darte',r2:'El Herido necesita fuentes de reconocimiento que no dependan del cargo ni del equipo. No porque el reconocimiento externo no importe sino porque cuando es la única fuente, cualquier ausencia se vive como crisis. El Capítulo 2 tiene el mapa de cómo el cargo va sustituyendo gradualmente la identidad personal. Recuperar esa identidad es también recuperar fuentes de sentido que el equipo no puede quitarte.',
+    c3:'Capítulo 9 — La desconexión programada como protección',r3:'El Herido tiende a estar siempre disponible porque la disponibilidad es su forma de demostrar entrega. Y esa disponibilidad permanente lo deja sin espacio para procesar lo que siente. La desconexión programada del Capítulo 9 no es abandono del equipo — es el espacio donde el Herido puede ser persona antes de volver a ser director.'},
+  'R-LI':{nombre:'El Invisible',combo:'Reconocimiento + Límites',
+    desc:'Das sin pedir, aguantas sin quejarte — hasta que el depósito se vacía y nadie lo vio venir. Tu explosión sorprende a todos porque nunca habías dado señales visibles. El problema no es que no las dieras — es que nadie las leyó, o que las disimulaste demasiado bien. El Invisible es el perfil más frecuente entre directivos de larga trayectoria: años de entrega construyen una imagen de solidez que hace invisible el agotamiento real.',
+    sf:'Fatiga que no desaparece con el descanso, tensión difusa sin foco claro, sueño no reparador.',
+    se:'Sensación de que nadie ve realmente lo que carga, resignación que se parece a la calma.',
+    sc:'Hace todo solo sin pedir ayuda, sonríe cuando está al límite, desaparece sin avisar cuando explota.',
+    c1:'Capítulo 6 — El directivo funcional y el Invisible',r1:'El Invisible es el directivo funcional por definición. Sigue cumpliendo, sigue llegando, sigue tomando decisiones — y el depósito lleva tiempo en rojo sin que nadie lo vea, empezando por él mismo. Churchill es el ejemplo histórico más documentado. La capacidad de seguir funcionando es también lo que impide recibir la señal de alarma que el colapso habría enviado. Seguir funcionando no es lo mismo que estar bien.',
+    c2:'Capítulo 9 — Poner límites antes de necesitarlos urgentemente',r2:'El Invisible necesita aprender a pedir antes de llegar al límite. No como señal de debilidad sino como práctica de sostenibilidad. Esta semana identifica una cosa que estás cargando solo y que podrías compartir o delegar. No por eficiencia — por principio. El directivo que nunca pide ayuda no está siendo fuerte. Está siendo invisible para sí mismo.',
+    c3:'Esta semana — hazte visible para alguien',r3:'Elige a una persona de confianza real y dile cómo estás de verdad. No el resumen optimista de siempre — la versión honesta. No necesitas que te solucionen nada. Solo que alguien sepa. El Capítulo 4 documenta lo que Lincoln hacía sistemáticamente: buscaba personas sin agenda propia para poder decir la verdad con facilidad. Ser visto no es una debilidad del Invisible. Es su mayor necesidad no resuelta.'},
+  'L-LI':{nombre:'El Vigilante',combo:'Lealtad + Límites',
+    desc:'Proteges a los tuyos con intensidad y exiges que respeten tu espacio. No hablas de límites — los defiendes cuando los cruzan. Percibes traición rápido y te cierras con la misma velocidad. Eres difícil de conocer de verdad porque el círculo de confianza es pequeño y la entrada es exigente. Pero quien entra sabe que tiene un aliado de por vida. El riesgo es que ese sistema de protección puede dejar fuera a personas valiosas que nunca entendieron las reglas.',
+    sf:'Mandíbula y puños que se tensan, mirada que se fija antes de responder, respiración que se contiene.',
+    se:'Alerta inmediata ante señales de deslealtad, desconfianza que se instala rápido y dura mucho.',
+    sc:'Se cierra sin explicar, deja de compartir información, responde con monosílabos cuando está activado.',
+    c1:'Capítulo 8 — El precio del sistema de vigilancia',r1:'El Vigilante construyó su sistema de alerta temprana porque en algún momento la lealtad falló y tuvo consecuencias reales. No es paranoia — es memoria. El problema aparece cuando el sistema ya no distingue entre amenazas reales y comportamientos que simplemente son diferentes al patrón esperado. Amy Edmondson documentó que la seguridad psicológica — la condición para que un equipo funcione bien — requiere que las personas puedan disentir sin que eso cueste la confianza del líder.',
+    c2:'Capítulo 9 — El Ancla para el momento de alerta',r2:'Cuando el sistema de alerta del Vigilante se activa — cuando percibe deslealtad o cruce de límites — aplica El Ancla antes de cerrar: tres respiraciones y una pregunta — ¿esto es una traición o es una diferencia? No todas las diferencias son traiciones. Y confundirlas tiene un costo muy específico: reduce el círculo de confianza hasta dejarlo tan pequeño que ya no puede sostener la carga del cargo.',
+    c3:'Capítulo 4 — Ampliar el círculo sin perder la protección',r3:'El Vigilante no necesita dejar de proteger su círculo — necesita ampliar los criterios de entrada. Esta semana identifica a alguien de tu entorno que opera diferente a ti pero con integridad real. No te pido que le des confianza inmediata — te pido que hagas la pregunta: ¿es diferente a mí o es una amenaza para lo que construí? La respuesta honesta puede abrir una puerta que llevas tiempo sin ver.'}
+};
+
+function calcular(){
+  const ss={C:0,R:0,L:0,LI:0};
+  for(const k in R) ss[R[k].m]+=R[k].v;
+  const orden=Object.entries(ss).sort((a,b)=>b[1]-a[1]);
+  const dom=orden[0][0], seg=orden[1][0];
+  const key=[dom,seg].sort().join('-');
+  const p=PERFILES[key]||PERFILES[[seg,dom].join('-')];
+  const col=dom==='C'?'#1A5EA8':dom==='R'?'#BA7517':dom==='L'?'#993C1D':'#534AB7';
+  const fondo=dom==='C'?'#EAF2FB':dom==='R'?'#FDF3E3':dom==='L'?'#FFF0E8':'#EEEDFE';
+
+  const hdr=document.getElementById('res-header');
+  hdr.style.background=fondo;hdr.style.borderLeftColor=col;
+  document.getElementById('res-tip').style.color=col;
+  document.getElementById('res-tip').textContent='Tu tipología directiva';
+  document.getElementById('res-nombre').style.color=col;
+  document.getElementById('res-nombre').textContent=p.nombre;
+  document.getElementById('res-combo').style.color=col;
+  document.getElementById('res-combo').textContent=p.combo;
+  document.getElementById('res-desc').textContent=p.desc;
+
+  const pcts={C:Math.round(ss.C/25*100),R:Math.round(ss.R/25*100),L:Math.round(ss.L/25*100),LI:Math.round(ss.LI/25*100)};
+  document.getElementById('m-c').textContent=pcts.C+'%';
+  document.getElementById('m-r').textContent=pcts.R+'%';
+  document.getElementById('m-l').textContent=pcts.L+'%';
+  document.getElementById('m-li').textContent=pcts.LI+'%';
+
+  const colores={'C':'#1A5EA8','R':'#BA7517','L':'#993C1D','LI':'#534AB7'};
+  if(miGrafica) miGrafica.destroy();
+  miGrafica=new Chart(document.getElementById('grafica'),{
+    type:'bar',
+    data:{
+      labels:['Control','Reconocimiento','Lealtad','Límites'],
+      datasets:[{
+        label:'Intensidad',
+        data:[pcts.C,pcts.R,pcts.L,pcts.LI],
+        backgroundColor:['#1A5EA8','#BA7517','#993C1D','#534AB7'],
+        borderRadius:4,barPercentage:.6
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'%'}}},
+      scales:{
+        y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:12}},grid:{color:'#F0F0EE'}},
+        x:{ticks:{font:{size:12}},grid:{display:false}}
+      }
+    }
+  });
+
+  const sfondo=col+'22';
+  ['s-fisica','s-emocional','s-conductual'].forEach(id=>{
+    document.getElementById(id).style.background=sfondo;
+    document.getElementById(id).querySelector('.senal-tipo').style.color=col;
+  });
+  document.getElementById('s-fisica-txt').textContent=p.sf;
+  document.getElementById('s-emocional-txt').textContent=p.se;
+  document.getElementById('s-conductual-txt').textContent=p.sc;
+
+  ['rec1','rec2','rec3'].forEach(id=>document.getElementById(id).style.borderLeftColor=col);
+  document.getElementById('rec1-cap').style.color=col;document.getElementById('rec1-cap').textContent=p.c1;document.getElementById('rec1-txt').textContent=p.r1;
+  document.getElementById('rec2-cap').style.color=col;document.getElementById('rec2-cap').textContent=p.c2;document.getElementById('rec2-txt').textContent=p.r2;
+  document.getElementById('rec3-cap').style.color=col;document.getElementById('rec3-cap').textContent=p.c3;document.getElementById('rec3-txt').textContent=p.r3;
+
+  window._r={p,ss,pcts,col};
+  // Guardar en localStorage
+  localStorage.setItem('test2_resultado', JSON.stringify({
+    tipologia: p.nombre,
+    combinacion: p.combo,
+    descripcion: p.desc,
+    senalFisica: p.sf,
+    senalEmocional: p.se,
+    senalConductual: p.sc,
+    mechaControl: pcts.C,
+    mechaReconocimiento: pcts.R,
+    mechaLealtad: pcts.L,
+    mechaLimites: pcts.LI,
+    rec1titulo: p.c1, rec1texto: p.r1,
+    rec2titulo: p.c2, rec2texto: p.r2,
+    rec3titulo: p.c3, rec3texto: p.r3,
+    fecha: new Date().toLocaleDateString('es-MX')
+  }));
+  localStorage.setItem('test2_visitado','1');
+  document.getElementById('btn-calcular').style.display='none';
+  document.getElementById('resultado-wrap').style.display='block';
+  document.getElementById('resultado-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function enviar(){
+  const correo=document.getElementById('correo').value.trim();
+  const nombre=document.getElementById('nombre').value.trim()||'Directivo';
+  const cargo=document.getElementById('cargo').value.trim();
+  const org=document.getElementById('org').value.trim();
+  const msg=document.getElementById('msg-correo');
+  const btn=document.getElementById('btn-env');
+  if(!correo||!correo.includes('@')){msg.textContent='Escribe un correo válido.';msg.className='msg err';return;}
+  const r=window._r;if(!r) return;
+  btn.disabled=true;btn.textContent='Enviando...';msg.textContent='';
+  const texto=
+    'TU TIPOLOGÍA: '+r.p.nombre+'\n'+
+    r.p.combo+'\n\n'+
+    r.p.desc+'\n\n'+
+    '━━━ SEÑALES PREVIAS AL ESTALLIDO ━━━\n'+
+    'Física: '+r.p.sf+'\n'+
+    'Emocional: '+r.p.se+'\n'+
+    'Conductual: '+r.p.sc+'\n\n'+
+    '━━━ QUÉ HACER CON ESTO ━━━\n\n'+
+    r.p.c1+'\n'+r.p.r1+'\n\n'+
+    r.p.c2+'\n'+r.p.r2+'\n\n'+
+    r.p.c3+'\n'+r.p.r3+'\n\n'+
+    '━━━ INTENSIDAD POR MECHA ━━━\n'+
+    'Control: '+r.pcts.C+'% · Reconocimiento: '+r.pcts.R+'% · Lealtad: '+r.pcts.L+'% · Límites: '+r.pcts.LI+'%\n\n'+
+    'Para guardar en PDF entra a estres.ciemx.com y usa el botón "Guardar como PDF".\n\n'+
+    'Enrique Berrueta Alvarez · Pedagogo · estres.ciemx.com';
+  emailjs.send('service_j8od1sk','template_2h2t21c',{
+    nombre,cargo,organizacion:org,
+    puntuacion:r.p.combo,perfil:r.p.nombre,
+    resultado:texto,to_email:correo
+  }).then(()=>{
+    msg.textContent='✓ Tu diagnóstico fue enviado a '+correo;msg.className='msg ok';
+    btn.textContent='Enviado ✓';
+  }).catch(()=>{
+    msg.textContent='Error al enviar. Verifica el correo e intenta de nuevo.';msg.className='msg err';
+    btn.disabled=false;btn.textContent='Enviar →';
+  });
+}
+</script>
+</body>
+</html>
