@@ -453,6 +453,16 @@ function enviar(){
     btn.disabled=false;btn.textContent='Enviar →';
   });
 }
+
+// Prellenar nombre desde localStorage si existe
+(function(){
+  var n = localStorage.getItem('directivo_nombre');
+  var ca = localStorage.getItem('directivo_cargo');
+  var or = localStorage.getItem('directivo_org');
+  if(n){ var el=document.getElementById('nombre'); if(el) el.value=n; }
+  if(ca){ var el=document.getElementById('cargo'); if(el) el.value=ca; }
+  if(or){ var el=document.getElementById('org'); if(el) el.value=or; }
+})();
 </script>
 </body>
 </html>

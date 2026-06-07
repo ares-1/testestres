@@ -368,6 +368,14 @@ function calcular(){
   document.getElementById('resultado-wrap').scrollIntoView({behavior:'smooth',block:'start'});
 
   // Guardar en localStorage para reporte integrado
+  // Guardar datos del directivo para todos los tests y el reporte
+  var nomVal = document.getElementById('nombre') ? document.getElementById('nombre').value.trim() : '';
+  var cargoVal = document.getElementById('cargo') ? document.getElementById('cargo').value.trim() : '';
+  var orgVal = document.getElementById('org') ? document.getElementById('org').value.trim() : '';
+  if(nomVal) localStorage.setItem('directivo_nombre', nomVal);
+  if(cargoVal) localStorage.setItem('directivo_cargo', cargoVal);
+  if(orgVal) localStorage.setItem('directivo_org', orgVal);
+
   localStorage.setItem('test1_resultado', JSON.stringify({
     titulo:tit, descripcion:desc,
     puntuacion:total, maximo:150, porcentaje:pct,
