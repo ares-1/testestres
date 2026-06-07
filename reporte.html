@@ -307,12 +307,10 @@ function generarReporte() {
     + 'Genera un reporte integrado. Responde SOLO con JSON valido sin ningun texto adicional antes o despues:\n'
     + '{"perfil_nombre":"nombre evocador 3-5 palabras","perfil_titulo":"titulo 8-12 palabras","diagnostico":"3 parrafos separados por salto de linea doble","dinamica":"2 parrafos separados por salto de linea doble","plan_semanas":[{"semana":"Semanas 1-2","titulo":"titulo","descripcion":"descripcion"},{"semana":"Semanas 3-4","titulo":"titulo","descripcion":"descripcion"},{"semana":"Semanas 5-6","titulo":"titulo","descripcion":"descripcion"},{"semana":"Semanas 7-8","titulo":"titulo","descripcion":"descripcion"},{"semana":"Semanas 9-10","titulo":"titulo","descripcion":"descripcion"},{"semana":"Semanas 11-12","titulo":"titulo","descripcion":"descripcion"}],"riesgo":"2 parrafos","lecturas":"3 libros con razon especifica","pregunta_cierre":"pregunta personalizada","coaching":["tema o pregunta 1 para trabajar con coach o mentor, especifica para este directivo","tema 2","tema 3","tema 4","tema 5","tema 6","tema 7","tema 8","tema 9","tema 10"]}';
 
-  fetch('https://api.anthropic.com/v1/messages', {
+  fetch('https://anthropic-proxy.berrueta.enrique.workers.dev', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
