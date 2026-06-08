@@ -390,35 +390,50 @@ function generarReporte() {
   })
   .then(function(data) {
     clearInterval(timers.anim); clearInterval(timers.cron);
-    var bar=document.getElementById("barra-ia"); if(bar){bar.style.width="100%";} var pc=document.getElementById("pct-txt"); if(pc){pc.textContent="100%";}
-    console.log('API respuesta:', data);
+    var bar=document.getElementById("barra-ia"); if(bar){bar.style.width="100%";}
+    var pc=document.getElementById("pct-txt"); if(pc){pc.textContent="100%";}
+    console.log('API respuesta completa:', JSON.stringify(data).substring(0,300));
     var texto = data.content && data.content[0] ? data.content[0].text : '';
-    console.log('Texto recibido (primeros 500 chars):', texto.substring(0,500));
-    // Limpiar el texto antes de parsear
+    console.log('Texto IA:', texto.substring(0,800));
+    // Limpiar backticks y markdown
     texto = texto.trim();
-    // Quitar backticks y markdown si los hay
-    texto = texto.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-    // Encontrar el JSON
+    if (texto.indexOf('```') === 0) {
+      texto = texto.replace(/^```json/i, '').replace(/^```/, '').trim();
+    }
+    if (texto.lastIndexOf('```') === texto.length - 3) {
+      texto = texto.substring(0, texto.length - 3).trim();
+    }
+    // Quitar cualquier backtick restante al inicio o fin
+    texto = texto.replace(/^`+/, '').replace(/`+$/, '').trim();
+    // Extraer JSON
     var match = texto.match(/\{[\s\S]*\}/);
     var jsonStr = match ? match[0] : texto;
-    // Limpiar caracteres problematicos dentro del JSON
-    // Reemplazar saltos de linea dentro de strings por espacio
-    jsonStr = jsonStr.replace(/:\s*"([^"]*?)"/g, function(m, s) {
-      return ': "' + s.replace(/\n/g, ' ').replace(/\r/g, ' ') + '"';
-    });
+    // Limpiar saltos de linea y tabs dentro de valores string
+    // Primero escapamos los saltos dentro de strings
+    var limpio = '';
+    var enString = false;
+    var escape = false;
+    for (var i = 0; i < jsonStr.length; i++) {
+      var ch = jsonStr[i];
+      if (escape) { limpio += ch; escape = false; continue; }
+      if (ch === '\\') { limpio += ch; escape = true; continue; }
+      if (ch === '"') { enString = !enString; limpio += ch; continue; }
+      if (enString && (ch === '\n' || ch === '\r' || ch === '\t')) {
+        limpio += ' '; continue;
+      }
+      limpio += ch;
+    }
     var r;
     try {
-      r = JSON.parse(jsonStr);
+      r = JSON.parse(limpio);
+      mostrarReporte(r);
     } catch(e) {
-      console.error('JSON parse error:', e.message);
-      console.log('JSON que fallo (primeros 300):', jsonStr.substring(0,300));
-      // Intentar extraer lo que podamos
+      console.error('JSON error:', e.message);
+      console.log('JSON limpio (primeros 500):', limpio.substring(0,500));
       document.getElementById('div-cargando').style.display = 'none';
       document.getElementById('div-listo').style.display = 'block';
-      document.getElementById('checks-listo').innerHTML = '<div style="color:var(--rojo);background:var(--rojo-c);border:1px solid var(--rojo);border-radius:4px;padding:1rem;font-size:15px;text-align:center">La IA genero una respuesta pero con formato incorrecto. Por favor intenta de nuevo.</div>';
-      return;
+      document.getElementById('checks-listo').innerHTML = '<div style="color:var(--rojo);background:var(--rojo-c);border:1px solid var(--rojo);border-radius:4px;padding:1rem;font-size:15px;text-align:center">Error de formato. Intenta de nuevo.</div>';
     }
-    mostrarReporte(r);
   })
   .catch(function(err) {
     clearInterval(timers.anim); clearInterval(timers.cron);
