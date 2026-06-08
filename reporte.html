@@ -361,18 +361,7 @@ function generarReporte() {
     + '"riesgo":"Sin accion en 90 dias la mecha de ' + t2tipo + ' seguira activandose en la zona de ' + t3zona + ' y la cuota de ' + t4cuota + ' seguira subiendo. El patron se consolida y se vuelve invisible. El riesgo especifico para ' + nombre_dir + ' es el apagamiento gradual del directivo funcional.",'
     + '"lecturas":"Sapolsky Why Zebras: entiende por que tu cuerpo en ' + t3zona + ' lleva la cuenta que tu no ves. Goleman Inteligencia Emocional: el secuestro amigdalino explica tu mecha de ' + t2tipo + ' con precision. Clear Habitos Atomicos: el manual para ejecutar este plan de 90 dias sin intentar todo a la vez.",'
     + '"pregunta_cierre":"' + nombre_dir + ': si alguien de tu equipo describiera como estas operando ahora mismo, que diria que no te has atrevido a decirte a ti mismo?",'
-    + '"coaching":['
-    + '"Lleva a tu coach el mapa de 2 semanas de tu mecha de ' + t2tipo + '. Juntos identifican el patron especifico y disenan una intervencion a medida para los proximos 30 dias.",'
-    + '"Antes de cada sesion con tu coach revisa las 3 decisiones mas importantes de la semana. Clasifica cada una: tome desde la reflexion o desde la urgencia. Ese ejercicio define el foco del acompanamiento.",'
-    + '"Con tu coach haz una auditoria de 30 minutos de tu cuota de ' + t4cuota + ' en los ultimos 3 meses. Identifica los 5 momentos de mayor costo. El patron que aparece define la prioridad real.",'
-    + '"Prepara con tu coach la conversacion pendiente mas importante. Guion completo: apertura, desarrollo, cierre. Tenla antes de la siguiente sesion y reporta que paso exactamente.",'
-    + '"Disenha con tu coach tu protocolo personal para cuando entras a la zona de ' + t3zona + '. No el del libro, el tuyo. Que senales fisicas sientes primero? Que funciona para salir? Cuanto tiempo tienes antes de que se instale?",'
-    + '"Revision mensual: aplica el Test 1 el ultimo dia de cada mes. Comparte el resultado con tu coach. Si baja activan protocolo. Si sube celebran. El test se convierte en el termometro del proceso.",'
-    + '"Identifica con tu coach a 3 personas de tu entorno que pueden darte retroalimentacion honesta. Prepara la pregunta exacta del Capitulo 4. Tu coach te ayuda a procesar lo que escuchas.",'
-    + '"Disena con tu coach una valvula de emergencia especifica para tu mecha de ' + t2tipo + '. Que haces en los primeros 30 segundos cuando sientes que se activa? Practica el protocolo en sesion.",'
-    + '"Con tu coach define los 3 limites que nunca has dicho en voz alta en tu organizacion. Disenan juntos como ponerlos antes de que los cruzen. Implementa uno por mes.",'
-    + '"Al terminar las 12 semanas haz con tu coach una sesion de cierre: que cambio, que sigue igual, que viene despues. Define si continuas el proceso y con que objetivo especifico."'
-    + ']}';
+    + '"coaching":["plan1","plan2","plan3","plan4","plan5","plan6","plan7","plan8","plan9","plan10"]}';
 
     fetch('https://anthropic-proxy.berrueta-enrique.workers.dev', {
     method: 'POST',
@@ -390,35 +379,71 @@ function generarReporte() {
   })
   .then(function(data) {
     clearInterval(timers.anim); clearInterval(timers.cron);
-    var bar=document.getElementById("barra-ia"); if(bar){bar.style.width="100%";} var pc=document.getElementById("pct-txt"); if(pc){pc.textContent="100%";}
-    console.log('API respuesta:', data);
+    var bar=document.getElementById("barra-ia"); if(bar){bar.style.width="100%";}
+    var pc=document.getElementById("pct-txt"); if(pc){pc.textContent="100%";}
+    console.log('API respuesta completa:', JSON.stringify(data).substring(0,300));
+    // El worker puede devolver JSON directo o error
+    if (data.error) {
+      console.log('Worker devolvio error:', data.error);
+      console.log('Texto crudo:', data.texto_crudo);
+      // Intentar parsear el texto_crudo directamente
+      var textoRaw = data.texto_crudo || '';
+      var primerLlave = textoRaw.indexOf('{');
+      var ultimaLlave = textoRaw.lastIndexOf('}');
+      if (primerLlave >= 0 && ultimaLlave > primerLlave) {
+        var jsonParcial = textoRaw.substring(primerLlave, ultimaLlave + 1);
+        try {
+          var rParcial = JSON.parse(jsonParcial);
+          mostrarReporte(rParcial);
+          return;
+        } catch(ep) {
+          console.log('No se pudo parsear parcial:', ep.message);
+        }
+      }
+    }
     var texto = data.content && data.content[0] ? data.content[0].text : '';
-    console.log('Texto recibido (primeros 500 chars):', texto.substring(0,500));
-    // Limpiar el texto antes de parsear
+    console.log('Texto IA:', texto.substring(0,800));
+    // Limpiar backticks y markdown - forma robusta
     texto = texto.trim();
-    // Quitar backticks y markdown si los hay
-    texto = texto.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-    // Encontrar el JSON
+    // Quitar ```json o ``` del inicio
+    texto = texto.replace(/^```json\s*/i, '').replace(/^```\s*/, '').trim();
+    // Quitar ``` del final
+    texto = texto.replace(/\s*```$/, '').trim();
+    // Encontrar solo el JSON entre { }
+    var primerLlave = texto.indexOf('{');
+    var ultimaLlave = texto.lastIndexOf('}');
+    if (primerLlave >= 0 && ultimaLlave > primerLlave) {
+      texto = texto.substring(primerLlave, ultimaLlave + 1);
+    }
+    // Extraer JSON
     var match = texto.match(/\{[\s\S]*\}/);
     var jsonStr = match ? match[0] : texto;
-    // Limpiar caracteres problematicos dentro del JSON
-    // Reemplazar saltos de linea dentro de strings por espacio
-    jsonStr = jsonStr.replace(/:\s*"([^"]*?)"/g, function(m, s) {
-      return ': "' + s.replace(/\n/g, ' ').replace(/\r/g, ' ') + '"';
-    });
+    // Limpiar saltos de linea y tabs dentro de valores string
+    // Primero escapamos los saltos dentro de strings
+    var limpio = '';
+    var enString = false;
+    var escape = false;
+    for (var i = 0; i < jsonStr.length; i++) {
+      var ch = jsonStr[i];
+      if (escape) { limpio += ch; escape = false; continue; }
+      if (ch === '\\') { limpio += ch; escape = true; continue; }
+      if (ch === '"') { enString = !enString; limpio += ch; continue; }
+      if (enString && (ch === '\n' || ch === '\r' || ch === '\t')) {
+        limpio += ' '; continue;
+      }
+      limpio += ch;
+    }
     var r;
     try {
-      r = JSON.parse(jsonStr);
+      r = JSON.parse(limpio);
+      mostrarReporte(r);
     } catch(e) {
-      console.error('JSON parse error:', e.message);
-      console.log('JSON que fallo (primeros 300):', jsonStr.substring(0,300));
-      // Intentar extraer lo que podamos
+      console.error('JSON error:', e.message);
+      console.log('JSON limpio (primeros 500):', limpio.substring(0,500));
       document.getElementById('div-cargando').style.display = 'none';
       document.getElementById('div-listo').style.display = 'block';
-      document.getElementById('checks-listo').innerHTML = '<div style="color:var(--rojo);background:var(--rojo-c);border:1px solid var(--rojo);border-radius:4px;padding:1rem;font-size:15px;text-align:center">La IA genero una respuesta pero con formato incorrecto. Por favor intenta de nuevo.</div>';
-      return;
+      document.getElementById('checks-listo').innerHTML = '<div style="color:var(--rojo);background:var(--rojo-c);border:1px solid var(--rojo);border-radius:4px;padding:1rem;font-size:15px;text-align:center">Error de formato. Intenta de nuevo.</div>';
     }
-    mostrarReporte(r);
   })
   .catch(function(err) {
     clearInterval(timers.anim); clearInterval(timers.cron);
