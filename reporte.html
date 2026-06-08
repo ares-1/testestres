@@ -103,11 +103,67 @@ nav{background:var(--negro);border-bottom:1px solid rgba(201,168,76,.25);padding
 .coaching-txt{font-size:15px;line-height:1.6;color:var(--texto-s)}
 @media(max-width:600px){.res-grid{grid-template-columns:1fr}.correo-row{flex-direction:column}}
 @media print{
-  nav,.acciones,.pie,.btn-s{display:none!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  nav,.acciones,.pie,.btn-s,.btn-pdf,.estado,.cargando{display:none!important}
+  body{background:white!important;font-size:13px;margin:0;padding:0}
+  .wrap{max-width:100%;padding:.5cm 1cm;margin:0}
   .reporte{display:block!important}
-  body{background:white}
-  .rh{background:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  @page{margin:1.5cm}
+
+  /* Header negro y dorado */
+  .rh{background:#111111!important;color:white!important;border:2px solid #C9A84C!important;border-radius:6px;padding:1.5cm 1cm;margin-bottom:.6cm;page-break-inside:avoid}
+  .rh-serie{color:#C9A84C!important;font-size:10px;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3cm}
+  .rh-nombre{color:rgba(255,255,255,.6)!important;font-size:11px;margin-bottom:.15cm}
+  .rh-titulo{color:white!important;font-size:18px;font-weight:700;margin-bottom:.2cm;line-height:1.2}
+  .rh-fecha{color:rgba(255,255,255,.4)!important;font-size:10px}
+
+  /* Grid de resultados */
+  .res-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:.4cm;margin-bottom:.6cm;page-break-inside:avoid}
+  .res-card{background:white!important;border:1px solid #D4C9A8!important;border-radius:4px;padding:.4cm;page-break-inside:avoid}
+  .rc-n{font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.1cm}
+  .rc-r{font-size:13px;font-weight:700;color:#111!important;margin-bottom:.1cm}
+  .rc-s{font-size:11px;color:#666!important}
+
+  /* Bloques de contenido */
+  .bloque{background:white!important;border:1px solid #D4C9A8!important;border-radius:6px;padding:.6cm .7cm;margin-bottom:.5cm;page-break-inside:avoid}
+  .bloque-kicker{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#8B6914!important;margin-bottom:.2cm}
+  .bloque-h{font-size:15px;font-weight:700;color:#111!important;margin-bottom:.35cm}
+  .bloque-txt{font-size:12px;line-height:1.7;color:#333!important}
+  .bloque-txt p{margin-bottom:.35cm}
+  .bloque-txt p:last-child{margin-bottom:0}
+
+  /* Semanas */
+  .semanas{gap:.3cm}
+  .semana{background:#EDE6D8!important;border-left:3px solid #C9A84C!important;padding:.4cm .5cm;page-break-inside:avoid}
+  .sem-n{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#8B6914!important;margin-bottom:.1cm}
+  .sem-h{font-size:12px;font-weight:700;color:#111!important;margin-bottom:.1cm}
+  .sem-d{font-size:11px;line-height:1.6;color:#444!important}
+
+  /* Coaching */
+  .coaching-lista{gap:.3cm}
+  .coaching-item{background:#EDE6D8!important;border:1px solid #D4C9A8!important;padding:.35cm .5cm;page-break-inside:avoid}
+  .coaching-num{font-size:16px;font-weight:700;color:#C9A84C!important;min-width:24px}
+  .coaching-txt{font-size:11px;line-height:1.6;color:#333!important}
+
+  /* Alerta */
+  .alerta{background:#111!important;border:2px solid #A32D2D!important;padding:.5cm;page-break-inside:avoid}
+  .alerta-t{color:#E24B4A!important;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:.2cm}
+  .alerta-d{color:rgba(255,255,255,.8)!important;font-size:11px;line-height:1.6}
+
+  /* Cierre */
+  .cierre{background:#111!important;border:2px solid #C9A84C!important;padding:.8cm;text-align:center;page-break-inside:avoid;margin-bottom:.5cm}
+  .cierre-txt{color:white!important;font-size:14px;font-style:italic;line-height:1.5;margin-bottom:.3cm}
+  .cierre-ref{color:#C9A84C!important;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+
+  /* Saltos de página */
+  .bloque:nth-child(3){page-break-before:always}
+  .div-semanas-wrap{page-break-before:always}
+  #div-coaching{page-break-before:always}
+
+  @page{
+    margin:1.5cm 1.8cm;
+    size:A4;
+  }
+  @page:first{margin-top:1cm}
 }
 </style>
 </head>
@@ -189,7 +245,7 @@ nav{background:var(--negro);border-bottom:1px solid rgba(201,168,76,.25);padding
       <div class="bloque-txt" id="txt-dinamica"></div>
     </div>
 
-    <div class="bloque">
+    <div class="bloque div-semanas-wrap">
       <div class="bloque-kicker">Tu plan de accion</div>
       <div class="bloque-h">90 dias - Semana a semana</div>
       <div class="semanas" id="div-semanas"></div>
@@ -226,7 +282,7 @@ nav{background:var(--negro);border-bottom:1px solid rgba(201,168,76,.25);padding
         <button class="btn-env" id="btn-env" onclick="enviarCorreo()">Enviar correo</button>
       </div>
       <div class="msg" id="msg-correo"></div>
-      <button class="btn-pdf" onclick="window.print()">
+      <button class="btn-pdf" onclick="imprimirPDF()">
         Guardar como PDF
       </button>
     </div>
@@ -524,6 +580,12 @@ function mostrarReporte(r) {
   }
 
   window.scrollTo(0, 0);
+}
+
+function imprimirPDF() {
+  // Dar instruccion al usuario
+  var ok = confirm('Para guardar como PDF:\n\n1. En el dialogo que aparece selecciona la impresora \"Guardar como PDF\"\n2. En Mas opciones activa \"Graficos de fondo\"\n3. Haz clic en Guardar\n\nPresiona OK para continuar.');
+  if (ok) window.print();
 }
 
 function enviarCorreo() {
