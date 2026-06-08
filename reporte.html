@@ -395,16 +395,18 @@ function generarReporte() {
     console.log('API respuesta completa:', JSON.stringify(data).substring(0,300));
     var texto = data.content && data.content[0] ? data.content[0].text : '';
     console.log('Texto IA:', texto.substring(0,800));
-    // Limpiar backticks y markdown
+    // Limpiar backticks y markdown - forma robusta
     texto = texto.trim();
-    if (texto.indexOf('```') === 0) {
-      texto = texto.replace(/^```json/i, '').replace(/^```/, '').trim();
+    // Quitar ```json o ``` del inicio
+    texto = texto.replace(/^```json\s*/i, '').replace(/^```\s*/, '').trim();
+    // Quitar ``` del final
+    texto = texto.replace(/\s*```$/, '').trim();
+    // Encontrar solo el JSON entre { }
+    var primerLlave = texto.indexOf('{');
+    var ultimaLlave = texto.lastIndexOf('}');
+    if (primerLlave >= 0 && ultimaLlave > primerLlave) {
+      texto = texto.substring(primerLlave, ultimaLlave + 1);
     }
-    if (texto.lastIndexOf('```') === texto.length - 3) {
-      texto = texto.substring(0, texto.length - 3).trim();
-    }
-    // Quitar cualquier backtick restante al inicio o fin
-    texto = texto.replace(/^`+/, '').replace(/`+$/, '').trim();
     // Extraer JSON
     var match = texto.match(/\{[\s\S]*\}/);
     var jsonStr = match ? match[0] : texto;
