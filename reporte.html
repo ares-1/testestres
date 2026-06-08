@@ -96,6 +96,8 @@ nav{background:var(--negro);border-bottom:1px solid rgba(201,168,76,.25);padding
 .btn-pdf:hover{background:var(--crema)}
 .msg{font-size:14px;margin-top:.5rem}
 .msg.ok{color:var(--verde)}.msg.err{color:var(--rojo)}
+.btn-borrar{background:transparent;color:var(--rojo);border:1px solid var(--rojo);border-radius:4px;padding:.6rem 1.5rem;font-family:'Crimson Pro',serif;font-size:15px;cursor:pointer;transition:all .2s}
+.btn-borrar:hover{background:var(--rojo-c)}
 .pie{text-align:center;font-size:13px;color:var(--texto-m);margin-top:2rem}
 .coaching-lista{display:flex;flex-direction:column;gap:.6rem;margin-top:.75rem}
 .coaching-item{display:flex;gap:.85rem;align-items:flex-start;padding:.85rem 1rem;background:var(--crema-o);border:1px solid var(--borde);border-radius:6px}
@@ -292,7 +294,7 @@ nav{background:var(--negro);border-bottom:1px solid rgba(201,168,76,.25);padding
   <div style="background:white;border:1px solid var(--borde);border-radius:8px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;text-align:center">
     <div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--negro);margin-bottom:.4rem">Nuevo diagnostico</div>
     <div style="font-size:14px;color:var(--texto-s);margin-bottom:.85rem">Si quieres repetir los tests o los hace otra persona en este mismo dispositivo, borra los resultados guardados y empieza de cero.</div>
-    <button onclick="borrarYReiniciar()" style="background:transparent;color:var(--rojo);border:1px solid var(--rojo);border-radius:4px;padding:.6rem 1.5rem;font-family:'Crimson Pro',serif;font-size:15px;cursor:pointer;transition:all .2s" onmouseover="this.style.background='var(--rojo-c)'" onmouseout="this.style.background='transparent'">Borrar tests y comenzar de nuevo</button>
+    <button onclick="borrarYReiniciar()" style="background:transparent;color:var(--rojo);border:1px solid var(--rojo);border-radius:4px;padding:.6rem 1.5rem;font-family:'Crimson Pro',serif;font-size:15px;cursor:pointer;transition:all .2s" class="btn-borrar">Borrar tests y comenzar de nuevo</button>
   </div>
 
   <div class="pie">Enrique Berrueta Alvarez - Pedagogo - estres.ciemx.com<br>El ultimo en enterarse - Plataforma sobre el estres directivo</div>
