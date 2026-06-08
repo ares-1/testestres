@@ -370,7 +370,7 @@ function generarReporte() {
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-5',
-      max_tokens: 1800,
+      max_tokens: 3000,
       messages: [{ role: 'user', content: prompt }]
     })
   })
@@ -382,7 +382,6 @@ function generarReporte() {
     var bar=document.getElementById("barra-ia"); if(bar){bar.style.width="100%";}
     var pc=document.getElementById("pct-txt"); if(pc){pc.textContent="100%";}
     console.log('API respuesta completa:', JSON.stringify(data).substring(0,300));
-<<<<<<< HEAD
     // El worker puede devolver JSON directo o error
     if (data.error) {
       console.log('Worker devolvio error:', data.error);
@@ -402,8 +401,6 @@ function generarReporte() {
         }
       }
     }
-=======
->>>>>>> dcb52cb9bfff34a5c458a4c229600797a5fa8b75
     var texto = data.content && data.content[0] ? data.content[0].text : '';
     console.log('Texto IA:', texto.substring(0,800));
     // Limpiar backticks y markdown - forma robusta
